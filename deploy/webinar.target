@@ -1,0 +1,6 @@
+[Unit]
+    Description=Webinar target service
+    Requires=postgresql.service
+    Requires=nats-server.service
+    Requires=webinar_bm.service
+    Requires=webinar_tgbot.service

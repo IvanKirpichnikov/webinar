@@ -1,0 +1,33 @@
+[bot]
+    # Token from telegram bot
+    # Type: String
+    token = ""
+
+[psql]
+    # Link to connect to PostgreSQL server
+    # Type: String
+    url = ""
+
+[nats]
+    # Link to connect to NATS server
+    # Type: String
+    url = ""
+
+[google_sheets]
+    # JSON string from Google service account
+    # Type: String
+    data = ""
+    # Link for google spreadsheet
+    # Type: String
+    url = ""
+
+[const]
+    # Telegram user ID of the bot's main administrator
+    # Type: Integer
+    owner_user_id =
+    # Telegram chat ID of the bot's main administrator
+    # Type: Integer
+    admin_chat_id =
+    # Number of buttons on the page in the "Webinar" pagination
+    # Type: Integer
+    count_webinars_button =
