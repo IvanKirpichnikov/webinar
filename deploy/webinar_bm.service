@@ -1,0 +1,19 @@
+[Unit]
+    Description=Webinar Broker Message
+    Requires=postgresql.service
+    Requires=nats-server.service
+
+[Service]
+    Type=simple
+    User=root
+
+    OOMScoreAdjust=-100
+
+    WorkingDirectory=/root/webinar
+    ExecStart=/root/webinar/venv/bin/python3.10 -m /root/webinar/src/presentation/broker_message
+    Restart=always
+    TimeoutStartSec=20
+    TimeoutStopSec=100
+
+[Install]
+    WantedBy=multi-user.target

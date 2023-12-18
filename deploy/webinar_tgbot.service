@@ -1,0 +1,19 @@
+[Unit]
+    Description=Webinar Telegram Bot
+    Requires=postgresql.service
+    Requires=nats-server.service
+
+[Service]
+    Type=simple
+    User=root
+
+    OOMScoreAdjust=-100
+
+    WorkingDirectory=/root/webinar
+    ExecStart=/root/webinar/venv/bin/python3.10 -m /root/webinar/src/presentation/tgbot
+    Restart=always
+    TimeoutStartSec=20
+    TimeoutStopSec=30
+
+[Install]
+    WantedBy=multi-user.target
