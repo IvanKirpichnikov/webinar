@@ -7,6 +7,7 @@ Requires=nats-server.service
 Type=simple
 User=root
 WorkingDirectory=/root/webinar/
+ExecStartPre=source venv/bin/activate
 ExecStart=webinar-bot --start broker_message
 Restart=always
 
