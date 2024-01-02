@@ -68,14 +68,13 @@ async def mailing_handler(
     telegram_chat_id: int = Path(),
     mailing_msg_id: int = Path(),
 ) -> None:
-    data = dict(
-        from_chat_id=admin_chat_id,
-        chat_id=telegram_chat_id,
-        message_id=mailing_msg_id,
-    )
     with suppress(TelegramBadRequest):
         try:
-            await bot.copy_message(**data)
+            await bot.copy_message(
+                from_chat_id=admin_chat_id,
+                chat_id=telegram_chat_id,
+                message_id=mailing_msg_id
+            )
         except TelegramRetryAfter as exception:
             await sleep(exception.retry_after)
             await msg.nack(delay=exception.retry_after)

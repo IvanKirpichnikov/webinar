@@ -8,7 +8,7 @@ Requires=webinar_tgbot.service
 Type=simple
 User=webinar-app
 WorkingDirectory=/home/webinar-app/webinar-bot
-ExecStart=/home/webinar-app/webinar-bot/venv/bin/python -m poetry webinar-bot --start broker_message
+ExecStart=/home/webinar-app/webinar-bot/venv/bin/webinar-bot webinar-bot --start tgbot
 Restart=always
 
 [Install]

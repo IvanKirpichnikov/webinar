@@ -1,47 +1,41 @@
-[tool.poetry]
+[build-system]
+requires = ['setuptools==68.1.2',]
+build-backend = 'setuptools.build_meta'
+
+[project]
 name = "webinar"
-version = "0.1.0"
-description = ""
-authors = ["Ivan Kirpichnikov <mmssvvvv570@gmail.com>"]
-packages = [
-    {include = "webinar", from = "src"}
+version = "1.0.0"
+description = "Webinar Applcation"
+requires-python = "==3.10.11"
+dependencies = [
+    'psycopg[binary]==3.1.16',
+    'types-cachetools==5.3.0.7',
+    'gspread-asyncio==1.9.0',
+    'types-toml==0.10.8.7',
+    'faststream==0.3.11',
+    'cachetools==5.3.2',
+    'adaptix==3.0.0b1',
+    'orjson==3.9.10',
+    'aiogram==3.3.0',
+    'nats-py==2.6.0',
+    'toml==0.10.2',
+    'mypy==1.8.0',
+    'ruff==0.1.9',
+    'lz4==4.3.2',
 ]
-keywords = ['webinar']
 
-[tool.poetry.dependencies]
-python = "^3.10"
-aiogram = "^3.3.0"
-adaptix = "^3.0.0b1"
-faststream = "^0.3.11"
-cachetools = "^5.3.2"
-toml = "^0.10.2"
-gspread-asyncio = "^1.9.0"
-orjson = "^3.9.10"
-lz4 = "^4.3.2"
-psycopg = {extras = ["binary"], version = "^3.1.16"}
-nats-py = "^2.6.0"
-types-cachetools = "^5.3.0.7"
 
-[tool.poetry.scripts]
-webinar-bot = 'webinar.presentation.cli.__main__:main'
+[project.scripts]
+webinar-bot = "webinar.presentation.cli.__main__:main"
 
-[tool.poetry.group.dev.dependencies]
-mypy = "^1.8.0"
-types-toml = "^0.10.8.7"
-ruff = "^0.1.9"
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[[project.authors]]
+name = "Ivan Kirpichnikov"
+email = "mmssvvvv570@gmail.com"
 
 [tool.mypy]
 ignore_missing_imports = true
 
-[tool.ruff]
-exclude = [
-    'venv',
 
-]
-line-length = 79
-target-version = "py310"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

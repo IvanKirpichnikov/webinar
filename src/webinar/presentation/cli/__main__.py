@@ -1,9 +1,6 @@
 import asyncio
 import sys
 from argparse import ArgumentParser
-from asyncio import (
-    WindowsSelectorEventLoopPolicy
-)
 
 from webinar.presentation.cli import start
 
@@ -24,6 +21,7 @@ def main() -> None:
     args = argparse.parse_args()
     
     if sys.platform == "win32":
+        from asyncio import WindowsSelectorEventLoopPolicy
         asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     
     if start_arg := args.start:
