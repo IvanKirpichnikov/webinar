@@ -13,7 +13,7 @@ async def broker_message(
 ) -> None:
     config = ConfigFactory().config
 
-    broker = NatsBroker(config.nats.url)
+    broker = NatsBroker(config.nats.url, connect_timeout=100)
     broker.include_router(route)
     app = FastStream(broker)
     app.on_startup(setup_context)

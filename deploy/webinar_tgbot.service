@@ -2,13 +2,12 @@
 Description=Webinar Telegram Bot
 Requires=postgresql.service
 Requires=nats-server.service
-Requires=webinar_bm.service
 
 [Service]
 Type=simple
 User=webinar-app
-WorkingDirectory=/home/webinar-app/webinar-bot
-ExecStart=/home/webinar-app/webinar-bot/venv/bin/webinar-bot webinar-bot --start tgbot
+WorkingDirectory=/home/webinar-app/webinar-bot/
+ExecStart=/home/webinar-app/webinar-bot/venv/bin/webinar-bot --start tgbot
 Restart=always
 
 [Install]

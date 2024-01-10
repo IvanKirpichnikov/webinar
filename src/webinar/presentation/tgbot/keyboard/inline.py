@@ -28,12 +28,20 @@ from webinar.presentation.tgbot.keyboard.callback_data import (
     SendAnswerQuestion,
 )
 
-
+HOMEWORKS_TEXT = {
+    1: 'Базовый модуль',
+    2: 'Базовый модуль',
+    3: 'Специализация',
+    4: 'Специализация',
+    5: 'Специализация',
+    6: 'Специализация',
+    7: 'Проект'
+}
 class InlineKeyboardFactory:
     @property
     def builder(self) -> InlineKeyboardBuilder:
         return InlineKeyboardBuilder()
-
+    
     @lru_cache()
     def ask_direction_admin_to_mailing(self) -> InlineKeyboardMarkup:
         builder = self.builder
@@ -49,7 +57,7 @@ class InlineKeyboardFactory:
         for text, callback_data in buttons_data:
             builder.button(text=text, callback_data=callback_data)
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache()
     def directions(
         self, model: BackButtonDataDTO | None = None
@@ -67,36 +75,36 @@ class InlineKeyboardFactory:
         for text, callback_data in buttons_data:
             builder.button(text=text, callback_data=callback_data)
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache()
     def main_menu(self) -> InlineKeyboardMarkup:
         builder = self.builder
         buttons_data = [
-            ("🎫 Записи вебинаров", "webinar_recordings"),
-            ("📝 Сдать задание", "send_homework"),
-            ("📚 Мои задания", "my_homeworks"),
-            ("❓ У меня вопрос", "questions"),
+            ("Записи вебинаров", "webinar_recordings"),
+            ("Сдать задание", "send_homework"),
+            ("Мои задания", "my_homeworks"),
+            ("Тех. поддержка", "technical_support"),
+            ("У меня вопрос", "questions"),
         ]
         for text, cd in buttons_data:
             builder.button(text=text, callback_data=cd)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache()
     def have_question(self) -> InlineKeyboardMarkup:
         builder = self.builder
         buttons_data = [
-            ("Тех. поддержка", "technical_support"),
-            ("Хочу задать вопрос", "question_from_user"),
+            ("Другая техническая проблема", "question_from_user"),
             ("Назад", "main_menu"),
             # ('Вебинары', 'question_webinars'),
             # ('Дом. задание', 'question_homework'),
         ]
         for text, cd in buttons_data:
             builder.button(text=text, callback_data=cd)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache()
     def technical_support(self) -> InlineKeyboardMarkup:
         builder = self.builder
@@ -109,15 +117,15 @@ class InlineKeyboardFactory:
         ]
         for text, cd in buttons_data:
             builder.button(text=text, callback_data=cd)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache(typed=True)
     def back(self, back_callback_data: str) -> InlineKeyboardMarkup:
         builder = self.builder
         builder.button(text="Назад", callback_data=back_callback_data)
         return builder.as_markup()
-
+    
     @lru_cache(typed=True)
     def send_question(self, back_callback_data: str) -> InlineKeyboardMarkup:
         builder = self.builder
@@ -127,14 +135,14 @@ class InlineKeyboardFactory:
         ]
         for text, cd in buttons_data:
             builder.button(text=text, callback_data=cd)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     def pagination_webinars(
         self, model: WebinarEntities, count_webinars_button: int, offset: int
     ) -> InlineKeyboardMarkup:
         builder = self.builder
-
+        
         for webinar in model.webinars:
             builder.button(text=webinar.name, url=webinar.url)
         if offset > 0:
@@ -146,20 +154,20 @@ class InlineKeyboardFactory:
             InlineKeyboardMarkup,
             builder.adjust(*[1 for _ in range(model.count)], 2, 1).as_markup(),
         )
-
+    
     def select_homework(
         self, model: list[HomeWorkNumber]
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         for number in model:
             builder.button(
-                text=f"{number} задание",
+                text=HOMEWORKS_TEXT[number],
                 callback_data=SelectHomeWorkByNumber(number=number),
             )
         builder.button(text="Назад", callback_data="main_menu")
         print(builder)
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     def under_revision_homeworks(
         self, model: HomeWorkEntities
     ) -> InlineKeyboardMarkup:
@@ -172,7 +180,7 @@ class InlineKeyboardFactory:
                 )
         builder.button(text="Назад", callback_data="main_menu")
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache(typed=True)
     def admin_main_menu(self, is_super_admin: bool) -> InlineKeyboardMarkup:
         builder = self.builder
@@ -187,9 +195,9 @@ class InlineKeyboardFactory:
             buttons_data.append(("Добавить админа", "add_admin"))
         for text, callback_data in buttons_data:
             builder.button(text=text, callback_data=callback_data)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache(typed=True)
     def select_direction_training_for(
         self, user_id: TelegramUserId
@@ -211,9 +219,9 @@ class InlineKeyboardFactory:
         ]
         for data in buttons_data:
             builder.button(**data)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     def pagination_homeworks(
         self,
         model: UserHomeWorkEntities,
@@ -241,7 +249,7 @@ class InlineKeyboardFactory:
             InlineKeyboardMarkup,
             builder.adjust(*[1 for _ in range(len_models)], xz, 1).as_markup(),
         )
-
+    
     def check_homework(
         self, telegram_user_id: TelegramUserId, evaluation: bool = False
     ) -> InlineKeyboardMarkup:
@@ -252,19 +260,19 @@ class InlineKeyboardFactory:
                 ("Отлично", "revision_good"),
             ]
         else:
-            buttons_data = [("Принять на работу", "accept_homework")]
+            buttons_data = [("Принять работу", "accept_homework")]
         buttons_data.append(("На доработку", "revision_homework"))
         buttons_data.append(("Аккаунт", f"tg://user?id={telegram_user_id}"))
         buttons_data.append(("Назад", "homeworks"))
-
+        
         for text, callback_data in buttons_data:
             if text == "Аккаунт":
                 builder.button(text=text, url=callback_data)
                 continue
             builder.button(text=text, callback_data=callback_data)
-
+        
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
-
+    
     @lru_cache()
     def send_answer_question(
         self, chat_id: TelegramChatId, number_question: int

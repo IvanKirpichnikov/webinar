@@ -1,13 +1,26 @@
-from dataclasses import asdict, astuple
+from dataclasses import (
+    asdict,
+    astuple
+)
 from datetime import datetime
-from typing import Any, cast, Mapping
+from typing import (
+    Any,
+    cast,
+    Mapping
+)
 
-from adaptix import as_is_loader, Retort
+from adaptix import (
+    as_is_loader,
+    Retort
+)
 from psycopg import AsyncConnection
 from psycopg.errors import UniqueViolation
 from psycopg.rows import DictRow
 
-from webinar.application.exceptions import AdminCreated, NotFoundAdmin
+from webinar.application.exceptions import (
+    AdminCreated,
+    NotFoundAdmin
+)
 from webinar.application.interfaces.dao.admin import AbstractAdminDAO
 from webinar.application.schemas.dto.admin import CreateAdminDTO
 from webinar.application.schemas.dto.common import (
@@ -20,15 +33,18 @@ from webinar.application.schemas.entities.admin import (
     AdminEntities,
     AdminEntity,
 )
-from webinar.infrastructure.database.dao.base import BaseDAO, BaseOtherCreate
+from webinar.infrastructure.database.dao.base import (
+    BaseDAO,
+    BaseOtherCreate
+)
 
 
 class AdminOtherCreateImpl(BaseOtherCreate):
     connect: AsyncConnection[DictRow]
-
+    
     def __init__(self, connect: AsyncConnection[DictRow]) -> None:
         self.connect = connect
-
+    
     async def create_table(self) -> None:
         sql = """
             CREATE TABLE IF NOT EXISTS admins(
@@ -39,18 +55,18 @@ class AdminOtherCreateImpl(BaseOtherCreate):
             );
         """
         await self.connect.execute(sql)
-
+    
     async def create_index(self) -> None:
         pass
 
 
 class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
     connect: AsyncConnection[DictRow]
-
+    
     def __init__(self, connect: AsyncConnection[DictRow]) -> None:
         self.connect = connect
         self.retort = Retort(recipe=[as_is_loader(datetime)])
-
+    
     async def create(self, model: CreateAdminDTO) -> None:
         sql = """
             INSERT INTO admins(
@@ -71,7 +87,7 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
                 await cursor.execute(sql, asdict(model))
             except UniqueViolation as error:
                 raise AdminCreated from error
-
+    
     async def exists(self, model: TelegramUserIdDTO) -> ResultExistsDTO:
         sql = """
             SELECT EXISTS(
@@ -88,7 +104,7 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         if data is None:
             return ResultExistsDTO(False)
         return ResultExistsDTO(data["exists"])
-
+    
     async def read_by_telegram_user_id(
         self, model: TelegramUserIdDTO
     ) -> AdminEntity:
@@ -116,7 +132,7 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         if raw_data is None:
             raise ValueError
         return self.retort.load(raw_data, AdminEntity)
-
+    
     async def read_all_by_direction_training(
         self, model: DirectionsTrainingDTO
     ) -> AdminEntities:
@@ -144,7 +160,7 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         if raw_data is None:
             raise NotFoundAdmin
         return self.retort.load(dict(admins=raw_data), AdminEntities)
-
+    
     async def read_data_by_telegram_user_id(
         self, model: TelegramUserIdDTO
     ) -> AdminDataInfoEntity:
@@ -164,7 +180,7 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         if raw_data is None:
             raise ValueError
         return self.retort.load(raw_data, AdminDataInfoEntity)
-
+    
     async def read_random(self) -> AdminEntity:
         sql = """
             SELECT

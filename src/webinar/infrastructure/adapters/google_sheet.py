@@ -13,6 +13,7 @@ from gspread_asyncio import (
 
 from webinar.application.schemas.dto.user import UpdateUserDataGoogleSheetsDto
 from webinar.application.schemas.enums.google_sheets import WorkSheetId
+from webinar.presentation.tgbot.keyboard.inline import HOMEWORKS_TEXT
 
 
 class GoogleSheetsAdapter:
@@ -35,7 +36,7 @@ class GoogleSheetsAdapter:
             Cell(1, 2, "Почта"),
             Cell(1, 3, "Telegram ID"),
             *[
-                Cell(1, colum_id, f"{num_work} Задание")
+                Cell(1, colum_id, HOMEWORKS_TEXT[num_work])
                 for num_work, colum_id in enumerate(range(4, 11), start=1)
             ],
             Cell(1, 11, "Балл"),

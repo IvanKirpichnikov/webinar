@@ -1,8 +1,19 @@
-from dataclasses import asdict, astuple
+from dataclasses import (
+    asdict,
+    astuple
+)
 from datetime import datetime
-from typing import Any, cast, Mapping
+from typing import (
+    Any,
+    cast,
+    Mapping
+)
 
-from adaptix import as_is_loader, name_mapping, Retort
+from adaptix import (
+    as_is_loader,
+    name_mapping,
+    Retort
+)
 from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 
@@ -21,19 +32,22 @@ from webinar.application.schemas.dto.user import (
 from webinar.application.schemas.entities.homework import HOMEWORK_RU
 from webinar.application.schemas.entities.user import (
     UserEntities,
-    UserStatsEntity,
+    UserStatsEntity
 )
 from webinar.application.schemas.enums.homework import HomeWorkStatusType
 from webinar.application.schemas.types import TelegramUserId
-from webinar.infrastructure.database.dao.base import BaseDAO, BaseOtherCreate
+from webinar.infrastructure.database.dao.base import (
+    BaseDAO,
+    BaseOtherCreate
+)
 
 
 class UserOtherCreateImpl(BaseOtherCreate):
     connect: AsyncConnection[DictRow]
-
+    
     def __init__(self, connect: AsyncConnection[DictRow]) -> None:
         self.connect = connect
-
+    
     async def create_table(self) -> None:
         sql = """
             CREATE TABLE IF NOT EXISTS users(
@@ -49,7 +63,7 @@ class UserOtherCreateImpl(BaseOtherCreate):
             );
         """
         await self.connect.execute(sql)
-
+    
     async def create_index(self) -> None:
         sqls = [
             "CREATE INDEX IF NOT EXISTS users_db_id_index ON users(db_id);",
@@ -63,7 +77,7 @@ class UserOtherCreateImpl(BaseOtherCreate):
 class UserDAOImpl(AbstractUserDAO, BaseDAO):
     connect: AsyncConnection[DictRow]
     retort: Retort
-
+    
     def __init__(self, connect: AsyncConnection[DictRow]) -> None:
         self.connect = connect
         self.retort = Retort(
@@ -72,7 +86,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 name_mapping(UserStatsEntity, extra_in="homework"),
             ]
         )
-
+    
     async def create(self, model: CreateUserDTO) -> None:
         sql = """
             INSERT INTO users(
@@ -99,7 +113,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
         """
         async with self.connect.cursor() as cursor:
             await cursor.execute(sql, asdict(model))
-
+    
     async def exists(self, model: TelegramUserIdDTO) -> ResultExistsDTO:
         sql = """
             SELECT EXISTS(
@@ -111,11 +125,11 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
         async with self.connect.cursor() as cursor:
             await cursor.execute(sql, astuple(model))
             raw_data = cast(Mapping[str, bool] | None, await cursor.fetchone())
-
+        
         if raw_data is None:
             return ResultExistsDTO(False)
         return ResultExistsDTO(raw_data["data"])
-
+    
     async def read_all_by_direction_training(
         self, model: DirectionsTrainingDTO
     ) -> UserEntities:
@@ -138,7 +152,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
         if not raw_data:
             raise NotFoundUsers
         return self.retort.load({"users": raw_data}, UserEntities)
-
+    
     async def read_stats(self) -> Mapping[str, int]:
         sql = """
             WITH users_data AS (
@@ -175,7 +189,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
             await cursor.execute(sql)
             raw_data = cast(Mapping[str, int], await cursor.fetchone())
         return raw_data
-
+    
     async def read_user_and_he_homeworks(
         self, model: DirectionTrainingDTO
     ) -> list[UpdateUserDataGoogleSheetsDto]:
@@ -211,10 +225,10 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
             await cursor.execute(sql_1, (model.direction_training,))
             raw_data_1 = await cursor.fetchall()
             for data_1 in raw_data_1:
+                homeworks: list[str | None] = [None for _ in range(7)]
                 telegram_user_id = TelegramUserId(data_1["telegram_user_id"])
                 await cursor.execute(sql_2, (telegram_user_id,))
                 raw_data_2 = await cursor.fetchall()
-                homeworks: list[str | None] = [None for _ in range(7)]
                 for data_2 in raw_data_2:
                     raw_status_type = data_2.get("status_type")
                     status_type = (

@@ -4,14 +4,21 @@ from typing import Any
 from uuid import uuid4
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
-from faststream import Context, Path
-from faststream.nats import JStream, NatsRouter
+from aiogram.exceptions import (
+    TelegramBadRequest,
+    TelegramRetryAfter
+)
+from faststream import (
+    Context,
+    Path
+)
+from faststream.nats import (
+    NatsRouter
+)
 from faststream.nats.annotations import (
     NatsBroker as NatsBrokerAnn,
     NatsMessage,
 )
-from nats.js.api import DeliverPolicy
 
 from webinar.application.exceptions import NotFoundUsers
 from webinar.application.schemas.dto.common import DirectionsTrainingDTO
@@ -23,7 +30,6 @@ from webinar.presentation.broker_message.decoder import decoder
 
 
 route = NatsRouter()
-stream = JStream("webinar_stream")
 
 
 @route.subscriber("start-mailing", decoder=decoder)
@@ -56,9 +62,6 @@ async def start_mailing(
 
 @route.subscriber(
     subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}",
-    stream=stream,
-    no_ack=True,
-    deliver_policy=DeliverPolicy.NEW,
 )
 async def mailing_handler(
     _: str,
@@ -78,6 +81,6 @@ async def mailing_handler(
         except TelegramRetryAfter as exception:
             await sleep(exception.retry_after)
             await msg.nack(delay=exception.retry_after)
-
+    
     await msg.reject()
     await sleep(0.08)

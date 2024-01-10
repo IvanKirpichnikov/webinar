@@ -11,6 +11,7 @@ from webinar.application.schemas.types import (
     HomeWorkNumber,
     TelegramUserId,
 )
+from webinar.presentation.tgbot.keyboard.inline import HOMEWORKS_TEXT
 
 
 HOMEWORK_RU: Final = {
@@ -45,14 +46,14 @@ class HomeWorkEntity:
         status_type = HOMEWORK_EMOJI[self.status_type]
         if russian_language:
             status_type = HOMEWORK_RU[self.status_type]
-        number = f"№ {self.number}"
+        number = HOMEWORKS_TEXT[self.number]
         date_time = self.date_time_registration.strftime("%d.%m")
         url = html.link("ссылка", self.url)
         comments = self.comments
         evaluation = self.evaluation
 
         if evaluation:
-            return f"{status_type} {number} {date_time} {url}\n{evaluation}"
+            return f"{status_type} {number} {date_time} {url}\n Оценка: {evaluation.lower()}"
         if comments:
             return f"{status_type} {number} {date_time} {url}\n{html.quote(comments)}"
         return f"{status_type} {number} {date_time} {url}"

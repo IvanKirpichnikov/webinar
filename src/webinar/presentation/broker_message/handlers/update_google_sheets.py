@@ -1,5 +1,7 @@
 from faststream import Context
-from faststream.nats import JStream, NatsRouter
+from faststream.nats import (
+    NatsRouter
+)
 
 from webinar.application.schemas.dto.common import DirectionTrainingDTO
 from webinar.application.schemas.enums.direction_type import (
@@ -11,7 +13,6 @@ from webinar.infrastructure.database.repository.user import UserRepositoryImpl
 
 
 route = NatsRouter()
-stream = JStream("webinar_stream")
 
 
 @route.subscriber("update.google_sheets")

@@ -14,20 +14,22 @@ STATS_TEXT = """
 Сдано заданий:
  Смм:
   Всего: {smm}
-  1 задание: {smm_first}
-  2 задание: {smm_second}
-  3 задание: {smm_third}
-  4 задание: {smm_fourth}
-  5 задание: {smm_fifth}
-  6 задание: {smm_sixth}
+  Базовый модуль: {smm_first}
+  Базовый модуль: {smm_second}
+  Специализация: {smm_third}
+  Специализация: {smm_fourth}
+  Специализация: {smm_fifth}
+  Специализация: {smm_sixth}
+  Проект: {smm_seventh}
  Копирайтинг:
   Всего: {copyrighting}
-  1 задание: {copyrighting_first}
-  2 задание: {copyrighting_second}
-  3 задание: {copyrighting_third}
-  4 задание: {copyrighting_fourth}
-  5 задание: {copyrighting_fifth}
-  6 задание: {copyrighting_sixth}
+  Базовый модуль: {copyrighting_first}
+  Базовый модуль: {copyrighting_second}
+  Специализация: {copyrighting_third}
+  Специализация: {copyrighting_fourth}
+  Специализация: {copyrighting_fifth}
+  Специализация: {copyrighting_sixth}
+  Проект: {copyrighting_seventh}
 """
 
 
