@@ -21,7 +21,7 @@ class UnitOfWorkRepositoryImpl(AbstractUnitOfWork):
     
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[None]:
-        with self.connect.transaction():
+        async with self.connect.transaction():
             yield None
     
     async def rollback(self) -> None:

@@ -1,12 +1,12 @@
 [build-system]
-requires = ['setuptools==68.1.2',]
+requires = ['setuptools==68.1.2', ]
 build-backend = 'setuptools.build_meta'
 
 [project]
 name = "webinar"
 version = "1.0.0"
 description = "Webinar Applcation"
-requires-python = "==3.10.11"
+requires-python = "~=3.10.11"
 dependencies = [
     'psycopg[binary]==3.1.16',
     'types-cachetools==5.3.0.7',

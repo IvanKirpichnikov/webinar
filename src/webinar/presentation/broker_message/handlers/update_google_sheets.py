@@ -1,7 +1,5 @@
 from faststream import Context
-from faststream.nats import (
-    NatsRouter
-)
+from faststream.nats import NatsRouter
 
 from webinar.application.schemas.dto.common import DirectionTrainingDTO
 from webinar.application.schemas.enums.direction_type import (

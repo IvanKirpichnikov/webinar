@@ -61,7 +61,7 @@ async def start_mailing(
 
 
 @route.subscriber(
-    subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}",
+    subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}"
 )
 async def mailing_handler(
     _: str,
