@@ -43,9 +43,8 @@ CALLBACK_DATAS: Final = [
 ]
 
 route = Router()
-filter_1 = StateFilter(SendYourQuestion)
-route.message.filter(filter_1)
-route.callback_query.filter(F.data.in_(CALLBACK_DATAS), filter_1)
+route.message.filter(StateFilter(SendYourQuestion))
+route.callback_query.filter(F.data.in_(CALLBACK_DATAS))
 
 
 @route.callback_query(F.data == "question_from_user")
@@ -64,7 +63,7 @@ async def v_handler(
     state_data = await state.get_data()
     msg = await event.message.answer(
         text="Пришли свой вопрос. Можете добавить фото или видео",
-        reply_markup=keyboard.inline.back("questions"),
+        reply_markup=keyboard.inline.back("technical_support"),
     )
     if msg_id_ := state_data.get("msg_id"):
         if msg_id_ == event.message.message_id:

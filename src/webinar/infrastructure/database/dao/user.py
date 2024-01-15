@@ -259,7 +259,6 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 raw_data_2 = await cursor.fetchall()
                 for data_2 in raw_data_2:
                     raw_status_type = data_2.get("status_type")
-                    print(raw_data_2)
                     if data_2['number'] == 7:
                         status_type = data_2['evaluation'] or 'Не оценен'
                     else:

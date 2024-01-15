@@ -1,12 +1,28 @@
 from contextlib import suppress
 
-from aiogram import Bot, F, Router
+from aiogram import (
+    Bot,
+    F,
+    Router
+)
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import and_f, MagicData, or_f, StateFilter
+from aiogram.filters import (
+    and_f,
+    MagicData,
+    or_f,
+    StateFilter
+)
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InaccessibleMessage, Message
+from aiogram.types import (
+    CallbackQuery,
+    InaccessibleMessage,
+    Message
+)
 
-from webinar.application.exceptions import AdminCreated, NotFoundAdmin
+from webinar.application.exceptions import (
+    AdminCreated,
+    NotFoundAdmin
+)
 from webinar.application.schemas.dto.admin import CreateAdminDTO
 from webinar.application.schemas.dto.common import (
     DirectionsTrainingDTO,
@@ -50,7 +66,7 @@ async def ask_user_id(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     state_data = await state.get_data()
     if msg_id_ := state_data.get("msg_id"):
         with suppress(TelegramBadRequest):
@@ -61,28 +77,24 @@ async def ask_user_id(
     copyrighting_dto = DirectionsTrainingDTO(
         [DirectionTrainingType.COPYRIGHTING]
     )
-
+    
     try:
-        admin_entities = await admin_repository.read_all_by_direction_training(
-            smm_dto
-        )
+        admin_entities = await admin_repository.read_all_by_direction_training(smm_dto)
     except NotFoundAdmin:
         smm_text = ""
     else:
         smm_text = admin_entities.string()
     try:
-        admin_entities = await admin_repository.read_all_by_direction_training(
-            copyrighting_dto
-        )
+        admin_entities = await admin_repository.read_all_by_direction_training(copyrighting_dto)
     except NotFoundAdmin:
         copyrighting_text = ""
     else:
         copyrighting_text = admin_entities.string()
     await message.edit_text(
-        text=f"Пришли телеграм айди администратора\n\n{smm_text}\n\n{copyrighting_text}",
+        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:{copyrighting_text}",
         reply_markup=keyboard.inline.back("admin_panel"),
     )
-
+    
     await state.set_data({"msg_id": event.message.message_id})
     await state.set_state(AddAdminState.ask_user_id)
 
@@ -105,7 +117,7 @@ async def ask_webinar_type(
         )
         await state.set_data({"msg_id": msg.message_id})
         return None
-
+    
     state_data = await state.get_data()
     if msg_id_ := state_data.get("msg_id"):
         await bot.delete_message(chat_id=event.chat.id, message_id=msg_id_)
@@ -141,7 +153,7 @@ async def ask_range_or_numb_handler(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
         await bot.delete_message(
@@ -169,7 +181,7 @@ async def get_word_range(
 ) -> None:
     if event.from_user is None or event.text is None:
         return
-
+    
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
         await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)

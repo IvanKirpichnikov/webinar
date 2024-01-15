@@ -13,14 +13,12 @@ from faststream import (
     Path
 )
 from faststream.nats import (
-    JStream,
     NatsRouter
 )
 from faststream.nats.annotations import (
     NatsBroker as NatsBrokerAnn,
     NatsMessage
 )
-from nats.js.api import DeliverPolicy
 
 from webinar.application.exceptions import NotFoundUsers
 from webinar.application.schemas.dto.common import DirectionsTrainingDTO
@@ -30,7 +28,6 @@ from webinar.presentation.broker_message.decoder import decoder
 
 
 route = NatsRouter()
-stream = JStream('webinar_stream')
 
 
 @route.subscriber("start-mailing", decoder=decoder)
@@ -64,9 +61,7 @@ async def start_mailing(
 
 
 @route.subscriber(
-    subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}",
-    stream=stream,
-    deliver_policy=DeliverPolicy.NEW
+    subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}"
 )
 async def mailing_handler(
     _: str,
@@ -76,17 +71,16 @@ async def mailing_handler(
     telegram_chat_id: int = Path(),
     mailing_msg_id: int = Path(),
 ) -> None:
+    task = bot.copy_message(
+        from_chat_id=admin_chat_id,
+        chat_id=telegram_chat_id,
+        message_id=mailing_msg_id
+    )
     with suppress(TelegramBadRequest):
         try:
-            await bot.copy_message(
-                from_chat_id=admin_chat_id,
-                chat_id=telegram_chat_id,
-                message_id=mailing_msg_id
-            )
+            await task
         except TelegramRetryAfter as exception:
             retry_after = exception.retry_after
             await sleep(retry_after)
-            await msg.nack(delay=retry_after)
-    
-    await msg.reject()
+            await task
     await sleep(0.08)

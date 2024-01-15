@@ -43,7 +43,7 @@ async def my_homeworks_handler(
     try:
         homeworks = await homework_repository.read_all_by_telegram_user_id(dto)
     except NotFoundHomeworks:
-        await event.answer("У вас нету домашних заданий", show_alert=True)
+        await event.answer("У вас нет домашних заданий", show_alert=True)
         return None
     
     text = (

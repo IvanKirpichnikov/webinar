@@ -88,7 +88,7 @@ async def pagination_handler(
             homework_dto
         )
     except NotFoundHomeworks:
-        await event.answer("Домашних заданий нету", show_alert=True)
+        await event.answer("Домашних заданий нет", show_alert=True)
         return None
 
     await message.edit_text(
@@ -352,7 +352,7 @@ async def ask_comments_handler(
     )
     await bot.send_message(
         chat_id=state_data["telegram_chat_id"],
-        text=f'Домашнее задание {state_data["number"]} был отправлен с комментарием:\n{comments}',
+        text=f'<u>Домашнее задание {state_data["number"]}</u> был отправлен с комментарием:\n{comments}',
     )
     await event.answer(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
