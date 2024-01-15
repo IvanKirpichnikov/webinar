@@ -91,7 +91,7 @@ async def ask_user_id(
     else:
         copyrighting_text = admin_entities.string()
     await message.edit_text(
-        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:{copyrighting_text}",
+        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:\n{copyrighting_text}",
         reply_markup=keyboard.inline.back("admin_panel"),
     )
     

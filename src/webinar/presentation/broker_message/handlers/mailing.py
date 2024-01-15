@@ -38,16 +38,17 @@ async def start_mailing(
 ) -> None:
     admin_chat_id = msg["admin_chat_id"]
     mailing_msg_id = msg["mailing_msg_id"]
-    direction_training = [DirectionTrainingType(msg["direction_training"])]
+    direction_training = DirectionTrainingType(msg["direction_training"])
+    direction_trainings = [direction_training]
     
-    if direction_training:
-        direction_training = [
+    if direction_training == DirectionTrainingType.ALl:
+        direction_trainings = [
             DirectionTrainingType.SMM,
             DirectionTrainingType.COPYRIGHTING,
         ]
     try:
         user_entities = await user_repository.read_all_by_direction_training(
-            DirectionsTrainingDTO(direction_training)
+            DirectionsTrainingDTO(direction_trainings)
         )
     except NotFoundUsers:
         return None
