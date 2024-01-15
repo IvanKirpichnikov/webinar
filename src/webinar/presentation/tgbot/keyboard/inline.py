@@ -165,7 +165,7 @@ class InlineKeyboardFactory:
             ("Рассылка", "mailing"),
             ("Домашние задания", "homeworks"),
             ("Опубликовать запись вебинара", "create_webinar"),
-            ("Обновить Google таблицы", "update_google_tables"),
+            ("Обновить Google таблицу", "update_google_tables"),
         ]
         if is_super_admin:
             buttons_data.append(("Добавить админа", "add_admin"))
