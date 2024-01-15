@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from webinar.application.schemas.dto.base import DataAccessObject
 from webinar.application.schemas.dto.common import TelegramUserIdDTO
-from webinar.application.schemas.enums.direction_type import (
-    DirectionTrainingType,
-)
+from webinar.application.schemas.enums.direction_type import DirectionTrainingType
 from webinar.application.schemas.enums.homework import HomeWorkStatusType
-from webinar.application.schemas.types import DataBaseId, HomeWorkNumber
+from webinar.application.schemas.types import (
+    DataBaseId,
+    HomeWorkNumber
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,7 +27,7 @@ class TelegramUserIdAndStatusTypeDTO(TelegramUserIdDTO):
 
 
 @dataclass(frozen=True, slots=True)
-class UpdatingTypeByIdDTO:
+class UpdatingTypeByIdDTO(DataAccessObject):
     db_id: DataBaseId
     status_type: HomeWorkStatusType
 
@@ -41,7 +43,7 @@ class UpdatingEvaluationByIdDTO(UpdatingTypeByIdDTO):
 
 
 @dataclass(frozen=True, slots=True)
-class HomeWorkIdDTO:
+class HomeWorkIdDTO(DataAccessObject):
     db_id: int
 
 
@@ -53,13 +55,3 @@ class HomeWorkPaginationDTO(TelegramUserIdDTO):
     offset: int
     numbers_range: bool = False
     letters_range: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class HomeWorkSpreadSheetDTO:
-    type_1: str | None = None
-    type_2: str | None = None
-    type_3: str | None = None
-    type_4: str | None = None
-    type_5: str | None = None
-    type_6: str | None = None

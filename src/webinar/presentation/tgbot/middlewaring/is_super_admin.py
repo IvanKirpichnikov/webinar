@@ -1,7 +1,15 @@
-from typing import Any, Awaitable, Callable, cast
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    cast
+)
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, User
+from aiogram.types import (
+    TelegramObject,
+    User
+)
 
 from webinar.application.config import ConfigFactory
 
@@ -19,7 +27,7 @@ class IsSuperAdminMiddlewareImpl(BaseMiddleware):
         user = cast(User | None, data.get("event_from_user"))
         if user is None:
             return await handler(event, data)
-
+        
         config = cast(ConfigFactory, data["config"])
         owner_user_id = config.config.const.owner_user_id
         data["is_super_admin"] = owner_user_id == user.id

@@ -26,12 +26,16 @@ from webinar.application.schemas.dto.admin import CreateAdminDTO
 from webinar.application.schemas.dto.common import (
     DirectionsTrainingDTO,
     ResultExistsDTO,
+    TelegramChatIdDTO,
     TelegramUserIdDTO,
 )
 from webinar.application.schemas.entities.admin import (
     AdminDataInfoEntity,
     AdminEntities,
     AdminEntity,
+)
+from webinar.application.schemas.types import (
+    TelegramChatId
 )
 from webinar.infrastructure.database.dao.base import (
     BaseDAO,
@@ -210,3 +214,31 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         if raw_data is None:
             raise NotFoundAdmin
         return self.retort.load(raw_data, AdminEntity)
+    
+    async def get_admin_by_letters_range_from_user(
+        self,
+        model: TelegramUserIdDTO
+    ) -> TelegramChatIdDTO:
+        sql = '''
+            SELECT u.telegram_chat_id
+            FROM admins AS a
+                JOIN users AS u
+                  ON u.db_id = a.db_user_id
+            WHERE (
+                SELECT LOWER(SUBSTRING(surname, 1, 1))
+                  FROM users
+                 WHERE telegram_user_id = %s
+            ) = ANY(STRING_TO_ARRAY(a.letters_range, NULL))
+            ORDER BY RANDOM()
+            LIMIT 1;
+        '''
+        async with self.connect.cursor() as cursor:
+            await cursor.execute(sql, astuple(model))
+            raw_data = await cursor.fetchone()
+        if not raw_data:
+            raise NotFoundAdmin
+        return TelegramChatIdDTO(
+            TelegramChatId(
+                raw_data['telegram_chat_id']
+            )
+        )

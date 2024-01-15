@@ -17,7 +17,10 @@ from adaptix import (
 from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 
-from webinar.application.exceptions import NotFoundUsers
+from webinar.application.exceptions import (
+    NotFoundUser,
+    NotFoundUsers
+)
 from webinar.application.interfaces.dao.user import AbstractUserDAO
 from webinar.application.schemas.dto.common import (
     DirectionsTrainingDTO,
@@ -32,6 +35,7 @@ from webinar.application.schemas.dto.user import (
 from webinar.application.schemas.entities.homework import HOMEWORK_RU
 from webinar.application.schemas.entities.user import (
     UserEntities,
+    UserEntity,
     UserStatsEntity
 )
 from webinar.application.schemas.enums.homework import HomeWorkStatusType
@@ -86,6 +90,29 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 name_mapping(UserStatsEntity, extra_in="homework"),
             ]
         )
+    
+    async def read_by_telegram_user_id(
+        self, model: TelegramUserIdDTO
+    ) -> UserEntity:
+        sql = """
+            SELECT db_id,
+                   telegram_user_id,
+                   telegram_chat_id,
+                   date_time_registration,
+                   direction_training,
+                   email,
+                   surname,
+                   name,
+                   patronymic
+              FROM users
+             WHERE telegram_user_id = %(telegram_user_id)s
+        """
+        async with self.connect.cursor() as cursor:
+            await cursor.execute(sql, asdict(model))
+            raw_data = cast(Mapping[str, Any], await cursor.fetchone())
+        if not raw_data:
+            raise NotFoundUser
+        return self.retort.load(raw_data, UserEntity)
     
     async def create(self, model: CreateUserDTO) -> None:
         sql = """
@@ -209,7 +236,8 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
         sql_2 = """
             SELECT
                 h.number,
-                h.status_type
+                h.status_type,
+                h.evaluation
             FROM
                 homeworks AS h
                 JOIN
@@ -231,18 +259,22 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 raw_data_2 = await cursor.fetchall()
                 for data_2 in raw_data_2:
                     raw_status_type = data_2.get("status_type")
-                    status_type = (
-                        HOMEWORK_RU[HomeWorkStatusType(raw_status_type)]
-                        if raw_status_type
-                        else None
-                    )
+                    print(raw_data_2)
+                    if data_2['number'] == 7:
+                        status_type = data_2['evaluation'] or 'Не оценен'
+                    else:
+                        status_type = (
+                            HOMEWORK_RU[HomeWorkStatusType(raw_status_type)]
+                            if raw_status_type
+                            else None
+                        )
                     homeworks[data_2["number"] - 1] = status_type
                 datas.append(
                     UpdateUserDataGoogleSheetsDto(
                         telegram_user_id=telegram_user_id,
                         homeworks_data=homeworks,
                         sup=(
-                            f'{data_1["surname"]}'
+                            f'{data_1["surname"]} '
                             f'{(data_1["name"])[0].upper()}.'
                             f'{(data_1.get("patronymic") or " ")[0].upper()}'
                         ),

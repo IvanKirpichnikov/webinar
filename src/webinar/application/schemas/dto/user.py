@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from webinar.application.schemas.dto.base import DataAccessObject
 from webinar.application.schemas.dto.common import TelegramUserIdDTO
-from webinar.application.schemas.enums.direction_type import (
-    DirectionTrainingType,
+from webinar.application.schemas.enums.direction_type import DirectionTrainingType
+from webinar.application.schemas.types import (
+    TelegramChatId,
+    TelegramUserId
 )
-from webinar.application.schemas.types import TelegramChatId, TelegramUserId
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,7 +22,7 @@ class CreateUserDTO(TelegramUserIdDTO):
 
 
 @dataclass(frozen=True, slots=True)
-class UpdateUserDataGoogleSheetsDto:
+class UpdateUserDataGoogleSheetsDto(DataAccessObject):
     telegram_user_id: TelegramUserId
     homeworks_data: list[str | None]
     email: str

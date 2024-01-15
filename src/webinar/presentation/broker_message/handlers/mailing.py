@@ -13,23 +13,24 @@ from faststream import (
     Path
 )
 from faststream.nats import (
+    JStream,
     NatsRouter
 )
 from faststream.nats.annotations import (
     NatsBroker as NatsBrokerAnn,
-    NatsMessage,
+    NatsMessage
 )
+from nats.js.api import DeliverPolicy
 
 from webinar.application.exceptions import NotFoundUsers
 from webinar.application.schemas.dto.common import DirectionsTrainingDTO
-from webinar.application.schemas.enums.direction_type import (
-    DirectionTrainingType,
-)
+from webinar.application.schemas.enums.direction_type import DirectionTrainingType
 from webinar.infrastructure.database.repository.user import UserRepositoryImpl
 from webinar.presentation.broker_message.decoder import decoder
 
 
 route = NatsRouter()
+stream = JStream('webinar_stream')
 
 
 @route.subscriber("start-mailing", decoder=decoder)
@@ -41,6 +42,7 @@ async def start_mailing(
     admin_chat_id = msg["admin_chat_id"]
     mailing_msg_id = msg["mailing_msg_id"]
     direction_training = [DirectionTrainingType(msg["direction_training"])]
+    
     if direction_training:
         direction_training = [
             DirectionTrainingType.SMM,
@@ -52,6 +54,7 @@ async def start_mailing(
         )
     except NotFoundUsers:
         return None
+    
     for user in user_entities.users:
         await broker.publish(
             message="",
@@ -61,7 +64,9 @@ async def start_mailing(
 
 
 @route.subscriber(
-    subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}"
+    subject="mailing.from.{admin_chat_id}.to.{telegram_chat_id}.msg_id.{mailing_msg_id}",
+    stream=stream,
+    deliver_policy=DeliverPolicy.NEW
 )
 async def mailing_handler(
     _: str,
@@ -79,8 +84,9 @@ async def mailing_handler(
                 message_id=mailing_msg_id
             )
         except TelegramRetryAfter as exception:
-            await sleep(exception.retry_after)
-            await msg.nack(delay=exception.retry_after)
+            retry_after = exception.retry_after
+            await sleep(retry_after)
+            await msg.nack(delay=retry_after)
     
     await msg.reject()
     await sleep(0.08)

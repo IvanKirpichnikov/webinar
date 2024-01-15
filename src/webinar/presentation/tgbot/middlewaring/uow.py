@@ -26,11 +26,11 @@ class UoWRepositoryMiddlewareImpl(BaseMiddleware):
         if get_flag(data, "repo_uow") is None:
             return await handler(event, data)
         
-        async with self.uow.transaction():
-            try:
+        try:
+            async with self.uow.transaction():
                 await handler(event, data)
-            except Exception as e:
-                await self.uow.rollback()
-                raise e
-            else:
-                await self.uow.commit()
+        except Exception as e:
+            await self.uow.rollback()
+            raise e
+        else:
+            await self.uow.commit()

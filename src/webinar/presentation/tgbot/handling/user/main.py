@@ -3,25 +3,23 @@ from aiogram import Router
 from webinar.presentation.tgbot.filtering import CheckUserRegisteringFilter
 from webinar.presentation.tgbot.handling.user import (
     main_menu,
+    my_homeworks,
     question_from_user,
-    questions,
-    questions_technical_support,
     registrating,
     send_homework,
-    webinar_recordings,
+    technical_support,
+    webinar_recordings
 )
-from webinar.presentation.tgbot.handling.user import my_homeworks
 
 
 files = [
-    registrating,
     main_menu,
-    send_homework,
-    questions,
-    question_from_user,
-    questions_technical_support,
-    webinar_recordings,
     my_homeworks,
+    question_from_user,
+    registrating,
+    send_homework,
+    technical_support,
+    webinar_recordings
 ]
 check_user = CheckUserRegisteringFilter()
 route = Router()

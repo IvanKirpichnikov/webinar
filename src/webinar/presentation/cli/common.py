@@ -7,11 +7,12 @@ from psycopg.rows import (
 from webinar.application.config import ConfigFactory
 
 
-async def setup() -> tuple[ConfigFactory, AsyncConnection[DictRow]]:
+async def setup() -> tuple[AsyncConnection[DictRow], ConfigFactory]:
     config_factory = ConfigFactory()
     config = config_factory.config
     
     psql_connect = await AsyncConnection.connect(
-        config.psql.url, row_factory=dict_row
+        config.psql.url,
+        row_factory=dict_row
     )
-    return config_factory, psql_connect
+    return psql_connect, config_factory

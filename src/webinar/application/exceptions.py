@@ -2,11 +2,11 @@ class BaseAppError(Exception):
     pass
 
 
-class DuplicateWebinar(BaseAppError):
+class NotFoundError(BaseAppError):
     pass
 
 
-class NotFoundAdmin(BaseAppError):
+class NotFoundAdmin(NotFoundError):
     pass
 
 
@@ -14,13 +14,21 @@ class NotFoundHomeworks(BaseAppError):
     pass
 
 
-class NotFoundWebinars(BaseAppError):
+class NotFoundUser(NotFoundError):
     pass
 
 
-class NotFoundUsers(BaseAppError):
+class NotFoundUsers(NotFoundUser):
+    pass
+
+
+class NotFoundWebinars(NotFoundError):
     pass
 
 
 class AdminCreated(BaseAppError):
+    pass
+
+
+class DuplicateWebinar(BaseAppError):
     pass

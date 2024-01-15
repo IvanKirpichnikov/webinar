@@ -5,9 +5,7 @@ from typing import (
 
 from aiogram.filters.callback_data import CallbackData
 
-from webinar.application.schemas.enums.direction_type import (
-    DirectionTrainingType,
-)
+from webinar.application.schemas.enums.direction_type import DirectionTrainingType
 from webinar.application.schemas.types import (
     DataBaseId,
     TelegramChatId

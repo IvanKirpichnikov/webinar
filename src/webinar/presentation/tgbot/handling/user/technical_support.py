@@ -5,6 +5,7 @@ from webinar.presentation.tgbot.keyboard import KeyboardFactory
 
 
 CALLBACK_DATAS = [
+    'technical_support',
     "dont_work_invite",
     "i_can_log_into_platform",
     "doesnt_load_lessons",
@@ -29,6 +30,21 @@ INSTRUCTION = f"""
 
 route = Router()
 route.callback_query.filter(F.data.in_(CALLBACK_DATAS))
+
+
+# technical_support.py
+@route.callback_query(F.data == "technical_support")
+async def technical_support_handler(
+    event: CallbackQuery, keyboard: KeyboardFactory
+) -> None:
+    if event.message is None:
+        return
+    if isinstance(event.message, InaccessibleMessage):
+        return
+
+    await event.message.edit_text(
+        "Какая проблема?", reply_markup=keyboard.inline.technical_support()
+    )
 
 
 @route.callback_query(F.data == "dont_work_invite")

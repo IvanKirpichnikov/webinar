@@ -1,7 +1,9 @@
 from faststream.nats import NatsRouter
 
-from webinar.presentation.broker_message.handlers import update_google_sheets
-from webinar.presentation.broker_message.handlers import mailing
+from webinar.presentation.broker_message.handlers import (
+    mailing,
+    update_google_sheets
+)
 
 
 route = NatsRouter()

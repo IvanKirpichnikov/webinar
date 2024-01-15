@@ -1,10 +1,12 @@
 from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 
+from webinar.application.exceptions import NotFoundAdmin
 from webinar.application.schemas.dto.admin import CreateAdminDTO
 from webinar.application.schemas.dto.common import (
     DirectionsTrainingDTO,
     ResultExistsDTO,
+    TelegramChatIdDTO,
     TelegramUserIdDTO,
 )
 from webinar.application.schemas.entities.admin import (
@@ -12,6 +14,7 @@ from webinar.application.schemas.entities.admin import (
     AdminEntities,
     AdminEntity,
 )
+from webinar.application.schemas.types import TelegramChatId
 from webinar.infrastructure.database.dao.admin import AdminDAOImpl
 from webinar.infrastructure.database.repository.base import BaseRepository
 
@@ -29,7 +32,22 @@ class AdminRepositoryImpl(BaseRepository):
     async def exists(self, model: TelegramUserIdDTO) -> ResultExistsDTO:
         dao = AdminDAOImpl(self.connect)
         return await dao.exists(model)
-
+    
+    async def get_admin_by_letters_range_from_user_or_random(
+        self,
+        model: TelegramUserIdDTO
+    ) -> TelegramChatIdDTO:
+        dao = AdminDAOImpl(self.connect)
+        try:
+            return await dao.get_admin_by_letters_range_from_user(model)
+        except NotFoundAdmin:
+            data = await self.read_random()
+            return TelegramChatIdDTO(
+                TelegramChatId(
+                    data.telegram_chat_id
+                )
+            )
+    
     async def read_random(self) -> AdminEntity:
         dao = AdminDAOImpl(self.connect)
         return await dao.read_random()

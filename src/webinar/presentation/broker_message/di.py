@@ -1,5 +1,8 @@
 from aiogram import Bot
-from faststream import Context, ContextRepo
+from faststream import (
+    Context,
+    ContextRepo
+)
 from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 
@@ -20,7 +23,7 @@ async def setup_context(
         config_.google_sheets.data, config_.google_sheets.url
     )
     await google_sheet.create_worksheet_and_set_names()
-
+    
     context.set_global("bot", bot)
     context.set_global("config", config)
     context.set_global("user_repository", repo)

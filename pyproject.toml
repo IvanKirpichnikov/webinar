@@ -37,5 +37,3 @@ email = "mmssvvvv570@gmail.com"
 
 [tool.mypy]
 ignore_missing_imports = true
-
-

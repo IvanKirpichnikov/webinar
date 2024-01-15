@@ -1,4 +1,8 @@
-from typing import Awaitable, Callable, cast
+from typing import (
+    Awaitable,
+    Callable,
+    cast
+)
 
 import lz4.frame
 from faststream.nats import NatsMessage

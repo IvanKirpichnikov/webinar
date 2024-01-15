@@ -11,8 +11,17 @@ from webinar.application.schemas.types import (
     HomeWorkNumber,
     TelegramUserId,
 )
-from webinar.presentation.tgbot.keyboard.inline import HOMEWORKS_TEXT
 
+
+HOMEWORKS_TEXT = {
+    1: 'Базовый модуль №1',
+    2: 'Базовый модуль №2',
+    3: 'Специализация №1',
+    4: 'Специализация №2',
+    5: 'Специализация №3',
+    6: 'Специализация №4',
+    7: 'Проект'
+}
 
 HOMEWORK_RU: Final = {
     HomeWorkStatusType.ACCEPTED: "Сдано",
@@ -37,11 +46,11 @@ class HomeWorkEntity:
     url: str
     comments: str | None = None
     evaluation: str | None = None
-
+    
     def __post_init__(self) -> None:
         if self.status_type != HomeWorkStatusType.UNDER_REVISION:
             self.comments = None
-
+    
     def string(self, russian_language: bool = False) -> str:
         status_type = HOMEWORK_EMOJI[self.status_type]
         if russian_language:
@@ -51,7 +60,7 @@ class HomeWorkEntity:
         url = html.link("ссылка", self.url)
         comments = self.comments
         evaluation = self.evaluation
-
+        
         if evaluation:
             return f"{status_type} {number} {date_time} {url}\n Оценка: {evaluation.lower()}"
         if comments:
@@ -62,7 +71,7 @@ class HomeWorkEntity:
 @dataclass(frozen=True, slots=True)
 class HomeWorkEntities:
     homeworks: list[HomeWorkEntity]
-
+    
     def string(self) -> str:
         return "\n".join(map(lambda x: x.string(), self.homeworks))
 
@@ -76,7 +85,7 @@ class UserHomeWorkEntity:
     name: str
     patronymic: str | None = None
     evaluation: str | None = None
-
+    
     def string(self) -> str:
         date_time = self.date_time_registration.strftime("%d.%m")
         number = self.number

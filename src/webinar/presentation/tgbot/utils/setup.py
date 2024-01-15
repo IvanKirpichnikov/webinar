@@ -6,26 +6,14 @@ from psycopg.rows import DictRow
 
 from webinar.application.config import ConfigFactory
 from webinar.infrastructure.adapters.cache import CacheStore
-from webinar.infrastructure.database.repository.admin import (
-    AdminRepositoryImpl,
-)
-from webinar.infrastructure.database.repository.homework import (
-    HomeWorkRepositoryImpl,
-)
-from webinar.infrastructure.database.repository.stats import (
-    StatsRepositoryImpl,
-)
+from webinar.infrastructure.database.repository.admin import AdminRepositoryImpl
+from webinar.infrastructure.database.repository.homework import HomeWorkRepositoryImpl
+from webinar.infrastructure.database.repository.stats import StatsRepositoryImpl
 from webinar.infrastructure.database.repository.user import UserRepositoryImpl
-from webinar.infrastructure.database.repository.webinar import (
-    WebinarRepositoryImpl,
-)
+from webinar.infrastructure.database.repository.webinar import WebinarRepositoryImpl
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
-from webinar.presentation.tgbot.middlewaring.is_super_admin import (
-    IsSuperAdminMiddlewareImpl,
-)
-from webinar.presentation.tgbot.middlewaring.uow import (
-    UoWRepositoryMiddlewareImpl,
-)
+from webinar.presentation.tgbot.middlewaring.is_super_admin import IsSuperAdminMiddlewareImpl
+from webinar.presentation.tgbot.middlewaring.uow import UoWRepositoryMiddlewareImpl
 
 
 def setup_repository(

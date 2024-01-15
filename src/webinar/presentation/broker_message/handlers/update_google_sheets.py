@@ -19,15 +19,15 @@ async def update_data_handler(
     google_sheet: GoogleSheetsAdapter = Context(),
     user_repository: UserRepositoryImpl = Context(),
 ) -> None:
-    data = await user_repository.read_user_and_he_homeworks(
-        DirectionTrainingDTO(DirectionTrainingType.SMM)
-    )
-    await google_sheet.update_data(
-        work_sheet_id=WorkSheetId.SMM, raw_data=data
-    )
-    data = await user_repository.read_user_and_he_homeworks(
-        DirectionTrainingDTO(DirectionTrainingType.COPYRIGHTING)
-    )
-    await google_sheet.update_data(
-        work_sheet_id=WorkSheetId.SMM, raw_data=data
-    )
+    training_types = [
+        (DirectionTrainingType.SMM, WorkSheetId.SMM),
+        (DirectionTrainingType.COPYRIGHTING, WorkSheetId.COPYRIGHTING)
+    ]
+    for training_type, work_sheet_id in training_types:
+        dto = DirectionTrainingDTO(training_type)
+        data = await user_repository.read_user_and_he_homeworks(dto)
+        await google_sheet.update_data(
+            work_sheet_id=work_sheet_id,
+            raw_data=data
+        )
+    await google_sheet.create_worksheet_and_set_names()
