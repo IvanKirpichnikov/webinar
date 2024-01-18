@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from webinar.application.schemas.dto.stats import CountHomeWorkDTO
 from webinar.application.schemas.enums.direction_type import (
     DirectionTrainingType,
 )
@@ -38,7 +37,8 @@ class UserEntities:
 
 @dataclass(frozen=True, slots=True)
 class UserStatsEntity:
-    homework: CountHomeWorkDTO
+    homework_smm: int = 0
+    homework_copyrighting: int = 0
     users: int = 0
     smm: int = 0
     copyrighting: int = 0

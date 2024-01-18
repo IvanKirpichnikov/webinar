@@ -178,7 +178,7 @@ async def send_question_handler(
     if isinstance(new_model, InaccessibleMessage):
         return None
     
-    await new_model.send_copy(chat_id=admin_chat_id)
+    await new_model.send_copy(chat_id=5784938646)
     await event.message.edit_reply_markup()
     await event.message.answer(
         f"Ваш вопрос был отправлен. Номер вопроса: #q{number_question} \nГлавное меню.",

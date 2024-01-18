@@ -13,7 +13,7 @@ from webinar.presentation.tgbot.states import MailingState
 route = Router()
 
 
-@route.callback_query(F.data == "mailing")
+@route.callback_query(F.data.in_({"mailing", 'back'}))
 async def ask_direction_handler(
     event: CallbackQuery, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
@@ -21,7 +21,7 @@ async def ask_direction_handler(
         return
     if isinstance(event.message, InaccessibleMessage):
         return
-
+    
     await event.message.edit_text(
         "Выбери направление",
         reply_markup=keyboard.inline.ask_direction_admin_to_mailing(),
@@ -40,8 +40,11 @@ async def ask_mailing_handler(
         return
     if isinstance(event.message, InaccessibleMessage):
         return
-
-    await event.message.edit_text("Введи сообщение")
+    
+    await event.message.edit_text(
+        "Введи сообщение",
+        reply_markup=keyboard.inline.back('back')
+    )
     await state.set_state(MailingState.ask_message)
     await state.update_data(direction_training=callback_data.type)
 

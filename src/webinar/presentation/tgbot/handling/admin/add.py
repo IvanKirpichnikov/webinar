@@ -63,8 +63,7 @@ async def ask_user_id(
 ) -> None:
     if event.message is None:
         return
-    message = event.message
-    if isinstance(message, InaccessibleMessage):
+    if isinstance(event.message, InaccessibleMessage):
         return
     
     state_data = await state.get_data()
@@ -90,12 +89,20 @@ async def ask_user_id(
         copyrighting_text = ""
     else:
         copyrighting_text = admin_entities.string()
-    await message.edit_text(
-        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:\n{copyrighting_text}",
-        reply_markup=keyboard.inline.back("admin_panel"),
-    )
     
-    await state.set_data({"msg_id": event.message.message_id})
+    msg_data = dict(
+        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:\n{copyrighting_text}",
+        reply_markup=keyboard.inline.back("admin_panel")
+    )
+    try:
+        await event.message.edit_text(**msg_data)
+    except TelegramBadRequest:
+        msg = await event.message.answer(**msg_data)
+        msg_id = msg.message_id
+    else:
+        msg_id = event.message.message_id
+    
+    await state.set_data({"msg_id": msg_id})
     await state.set_state(AddAdminState.ask_user_id)
 
 
@@ -109,7 +116,7 @@ async def ask_webinar_type(
     is_super_admin: bool,
 ) -> None:
     try:
-        user_id = TelegramUserId(user_id)  # type: ignore
+        user_id = TelegramUserId(user_id)
     except ValueError:
         msg = await event.answer(
             "Вы отправили не правильный айди. Повторите попытку.",

@@ -16,4 +16,4 @@ async def update_google_tables_handler(
     is_super_admin: bool,
 ) -> None:
     await broker.publish(message="", subject="update.google_sheets")
-    await event.answer("Обновления произошло", show_alert=True)
+    await event.answer("Обновление произошло", show_alert=True)

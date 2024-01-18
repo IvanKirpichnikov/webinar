@@ -37,23 +37,25 @@ STATS_TEXT = """
 class StatsEntity:
     users: UserStatsEntity
     homework: HomeWorkStatsEntities
-
+    
     @property
     def string(self) -> str:
         user = self.users
         homework = self.homework
-        homeworks: dict[str, Any] = {
-            f"smm_{key}": data for key, data in asdict(homework.smm).items()
-        } | {
-            f"copyrighting_{key}": data
-            for key, data in asdict(homework.copyrighting).items()
-        }
-
+        homeworks: dict[str, Any] = (
+            {
+                f"smm_{key}": data for key, data in asdict(homework.smm).items()
+            } | {
+                f"copyrighting_{key}": data
+                for key, data in asdict(homework.copyrighting).items()
+            }
+        )
+        
         return STATS_TEXT.format(
             users=user.users,
             users_smm=user.smm,
             users_copyrighting=user.copyrighting,
-            smm=user.homework.smm,
-            copyrighting=user.homework.copyrighting,
+            smm=user.homework_smm,
+            copyrighting=user.homework_copyrighting,
             **homeworks,
         )
