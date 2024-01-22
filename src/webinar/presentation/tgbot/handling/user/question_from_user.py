@@ -23,6 +23,7 @@ from aiogram.types import (
 
 from webinar.application.config import ConfigFactory
 from webinar.application.exceptions import NotFoundAdmin
+from webinar.application.schemas.dto.admin import GetAdminFromDirectionTraining
 from webinar.application.schemas.dto.common import TelegramUserIdDTO
 from webinar.application.schemas.types import (
     TelegramChatId,
@@ -141,22 +142,23 @@ async def send_question_handler(
         return
     if isinstance(event.message, InaccessibleMessage):
         return
-    
-    telegram_user_id_dto = TelegramUserIdDTO(
-        TelegramUserId(
-            event.from_user.id
-        )
+    telegram_user_id = TelegramUserId(event.from_user.id)
+    telegram_user_id_dto = TelegramUserIdDTO(telegram_user_id)
+    user_entity = await user_repository.read_by_telegram_user_id(telegram_user_id_dto)
+    dto = GetAdminFromDirectionTraining(
+        telegram_user_id=telegram_user_id,
+        direction_training=user_entity.direction_training
     )
     state_data = await state.get_data()
     try:
-        admin_entity = await admin_repository.get_admin_by_letters_range_from_user_or_random(telegram_user_id_dto)
+        admin_entity = await admin_repository.get_admin_by_letters_range_from_user_or_random(dto)
         admin_chat_id = admin_entity.telegram_chat_id
     except NotFoundAdmin:
         admin_chat_id = config.config.const.owner_chat_id
     
     number_question = state_data["number_question"]
     chat_id = event.message.chat.id
-    user_entity = await user_repository.read_by_telegram_user_id(telegram_user_id_dto)
+    
     text = (
         f'ФИО: {user_entity.sup}\n'
         f'Почта: {user_entity.email}\n'

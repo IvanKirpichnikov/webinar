@@ -1,4 +1,5 @@
 from aiogram import F, html, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InaccessibleMessage
 
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
@@ -35,7 +36,9 @@ route.callback_query.filter(F.data.in_(CALLBACK_DATAS))
 # technical_support.py
 @route.callback_query(F.data == "technical_support")
 async def technical_support_handler(
-    event: CallbackQuery, keyboard: KeyboardFactory
+    event: CallbackQuery,
+    keyboard: KeyboardFactory,
+    state: FSMContext
 ) -> None:
     if event.message is None:
         return
@@ -45,6 +48,7 @@ async def technical_support_handler(
     await event.message.edit_text(
         "Какая проблема?", reply_markup=keyboard.inline.technical_support()
     )
+    await state.clear()
 
 
 @route.callback_query(F.data == "dont_work_invite")

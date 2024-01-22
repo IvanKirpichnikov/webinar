@@ -22,7 +22,7 @@ from webinar.application.exceptions import (
     NotFoundAdmin
 )
 from webinar.application.interfaces.dao.admin import AbstractAdminDAO
-from webinar.application.schemas.dto.admin import CreateAdminDTO
+from webinar.application.schemas.dto.admin import CreateAdminDTO, GetAdminFromDirectionTraining
 from webinar.application.schemas.dto.common import (
     DirectionsTrainingDTO,
     ResultExistsDTO,
@@ -185,6 +185,67 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
             raise ValueError
         return self.retort.load(raw_data, AdminDataInfoEntity)
     
+    async def get_admin_by_letters_range_from_user(
+        self,
+        model: GetAdminFromDirectionTraining
+    ) -> TelegramChatIdDTO:
+        sql = '''
+            SELECT u.telegram_chat_id
+            FROM admins AS a
+                JOIN users AS u
+                  ON u.db_id = a.db_user_id
+            WHERE (
+                SELECT LOWER(SUBSTRING(surname, 1, 1))
+                  FROM users
+                 WHERE telegram_user_id = %(telegram_user_id)s
+            ) = ANY(STRING_TO_ARRAY(a.letters_range, NULL))
+            AND a.direction_training = %(direction_training)s
+            ORDER BY RANDOM()
+            LIMIT 1;
+        '''
+        async with self.connect.cursor() as cursor:
+            await cursor.execute(sql, asdict(model))
+            raw_data = await cursor.fetchone()
+        print(raw_data, model)
+        if not raw_data:
+            raise NotFoundAdmin
+        return TelegramChatIdDTO(
+            TelegramChatId(
+                raw_data['telegram_chat_id']
+            )
+        )
+    
+    async def read_random_by_direction_training(self, model: DirectionsTrainingDTO) -> AdminEntity:
+        sql = """
+            SELECT
+                a.db_user_id,
+                a.direction_training,
+                a.letters_range,
+                a.numbers_range,
+                u.db_id,
+                u.telegram_user_id,
+                u.telegram_chat_id,
+                u.date_time_registration,
+                u.direction_training,
+                u.email,
+                u.surname,
+                u.name,
+                u.patronymic
+            FROM
+                admins AS a
+            JOIN
+                users AS u
+                ON u.db_id = a.db_user_id
+            WHERE a.direction_training = %s
+            ORDER BY RANDOM();
+        """
+        async with self.connect.cursor() as cursor:
+            await cursor.execute(sql, astuple(model))
+            raw_data = cast(Mapping[str, Any] | None, await cursor.fetchone())
+        if raw_data is None:
+            raise NotFoundAdmin
+        return self.retort.load(raw_data, AdminEntity)
+    
     async def read_random(self) -> AdminEntity:
         sql = """
             SELECT
@@ -214,31 +275,3 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         if raw_data is None:
             raise NotFoundAdmin
         return self.retort.load(raw_data, AdminEntity)
-    
-    async def get_admin_by_letters_range_from_user(
-        self,
-        model: TelegramUserIdDTO
-    ) -> TelegramChatIdDTO:
-        sql = '''
-            SELECT u.telegram_chat_id
-            FROM admins AS a
-                JOIN users AS u
-                  ON u.db_id = a.db_user_id
-            WHERE (
-                SELECT LOWER(SUBSTRING(surname, 1, 1))
-                  FROM users
-                 WHERE telegram_user_id = %s
-            ) = ANY(STRING_TO_ARRAY(a.letters_range, NULL))
-            ORDER BY RANDOM()
-            LIMIT 1;
-        '''
-        async with self.connect.cursor() as cursor:
-            await cursor.execute(sql, astuple(model))
-            raw_data = await cursor.fetchone()
-        if not raw_data:
-            raise NotFoundAdmin
-        return TelegramChatIdDTO(
-            TelegramChatId(
-                raw_data['telegram_chat_id']
-            )
-        )

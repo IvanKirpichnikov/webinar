@@ -95,9 +95,9 @@ async def ask_user_id(
         reply_markup=keyboard.inline.back("admin_panel")
     )
     try:
-        await event.message.edit_text(**msg_data)
+        await event.message.edit_text(**msg_data)  # type: ignore
     except TelegramBadRequest:
-        msg = await event.message.answer(**msg_data)
+        msg = await event.message.answer(**msg_data)  # type: ignore
         msg_id = msg.message_id
     else:
         msg_id = event.message.message_id

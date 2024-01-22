@@ -42,5 +42,5 @@ class AbstractAdminDAO(Protocol):
         raise NotImplementedError
 
     @abstractmethod
-    async def read_random(self) -> AdminEntity:
+    async def read_random_by_direction_training(self, model: DirectionsTrainingDTO) -> AdminEntity:
         raise NotImplementedError

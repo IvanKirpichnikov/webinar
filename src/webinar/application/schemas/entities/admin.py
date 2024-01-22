@@ -14,6 +14,10 @@ class AdminEntity(UserEntity):
     def string(self) -> str:
         name = self.name.title()
         surname = self.surname.title()
+        if raw_lr := self.letters_range:
+            letters_range = f'{raw_lr[0]}-{raw_lr[-1]}'.title()
+            return f"{name} {surname} {letters_range}"
+        
         return f"{name} {surname}"
 
 
