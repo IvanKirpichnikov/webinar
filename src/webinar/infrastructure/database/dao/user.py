@@ -229,11 +229,10 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 patronymic,
                 email
             FROM
-                users AS u
-            LEFT JOIN admins AS a
-            ON a.db_user_id = u.db_id
+                users
             WHERE
                 direction_training = %s
+                AND db_id not in (select db_user_id from admins)
             ORDER BY u.surname;
         """
         sql_2 = """
