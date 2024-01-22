@@ -222,7 +222,7 @@ async def get_word_range(
                 direction_training=state_data["direction_training"],
                 letters_range=letters_range,
             )
-    print(model)
+    
     try:
         await admin_repository.create(model)
     except AdminCreated:

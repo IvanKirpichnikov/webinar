@@ -233,7 +233,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
             WHERE
                 direction_training = %s
                 AND db_id not in (select db_user_id from admins)
-            ORDER BY u.surname;
+            ORDER BY surname;
         """
         sql_2 = """
             SELECT
@@ -262,7 +262,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 for data_2 in raw_data_2:
                     raw_status_type = data_2.get("status_type")
                     if data_2['number'] == 7:
-                        status_type = data_2['evaluation'].title() or 'Не оценен'
+                        status_type = (data_2['evaluation'] or 'Не оценен').title()
                     else:
                         status_type = (
                             HOMEWORK_RU[HomeWorkStatusType(raw_status_type)]
