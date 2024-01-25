@@ -181,7 +181,7 @@ async def add_homework_handler(
             )
         )
     await event.answer(
-        "Задание успешно сдано", reply_markup=keyboard.inline.main_menu()
+        "Задание успешно сдана", reply_markup=keyboard.inline.main_menu()
     )
     await event.delete()
     await state.clear()

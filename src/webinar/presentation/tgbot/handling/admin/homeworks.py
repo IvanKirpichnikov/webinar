@@ -1,4 +1,7 @@
+from contextlib import suppress
+
 from aiogram import Bot, F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 
@@ -53,7 +56,7 @@ async def pagination_handler(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     telegram_user_id = TelegramUserId(event.from_user.id)
     count_homeworks = (
         10**20 if is_super_admin else config.config.const.count_homeworks
@@ -74,7 +77,7 @@ async def pagination_handler(
         direction_training = [admin_entity.direction_training]
         letters_range = admin_entity.letters_range
         numbers_range = admin_entity.numbers_range
-
+    
     homework_dto = HomeWorkPaginationDTO(
         telegram_user_id=telegram_user_id,
         count_homeworks=count_homeworks,
@@ -91,7 +94,7 @@ async def pagination_handler(
     except NotFoundHomeworks:
         await event.answer("Домашних заданий нет", show_alert=True)
         return None
-
+    
     await message.edit_text(
         "Список сданных работ",
         reply_markup=keyboard.inline.pagination_homeworks(
@@ -121,7 +124,7 @@ async def pagination_h(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     state_data = await state.get_data()
     old_offset = state_data.get("offset", 1)
     offset_table = dict(back=old_offset - 1, next=old_offset + 1)
@@ -146,7 +149,7 @@ async def pagination_h(
         direction_training = [admin_entity.direction_training]
         letters_range = admin_entity.letters_range
         numbers_range = admin_entity.numbers_range
-
+    
     homework_dto = HomeWorkPaginationDTO(
         telegram_user_id=telegram_user_id,
         count_homeworks=count_homeworks,
@@ -171,7 +174,7 @@ async def pagination_h(
             is_super_admin,
         )
         return None
-
+    
     await message.edit_text(
         "Список сданных работ",
         reply_markup=keyboard.inline.pagination_homeworks(
@@ -201,7 +204,7 @@ async def select_homework_handler(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     homework_db_id = callback_data.db_id
     model = await homework_repository.read_homework_by_db_id_and_user_info(
         HomeWorkIdDTO(homework_db_id)
@@ -209,21 +212,20 @@ async def select_homework_handler(
     surname = model.surname.title()
     name = model.name[0].title()
     date_time = model.date_time_registration.strftime("%d.%m")
-
+    
     if patronymic := model.patronymic:
         sup = f"{surname} {name}.{patronymic[0].title()}"
     else:
         sup = f"{surname} {name}."
-
+    
     await message.edit_text(
-        (
-            f"Работа {sup}\n{model.email}\n"
-            f"Направление: {model.direction_training}\n"
-            f"Сдана: {date_time}\n"
-            f"Ссылка: {model.url}"
-        ),
+        f"Работа {sup}\n{model.email}\n"
+        f"Направление: {model.direction_training}\n"
+        f"Сдана: {date_time}\n"
+        f"Ссылка: {model.url}",
         reply_markup=keyboard.inline.check_homework(
-            model.telegram_user_id, True if model.number == 7 else False
+            model.telegram_user_id,
+            True if model.number == 7 else False
         ),
         disable_web_page_preview=True,
     )
@@ -253,10 +255,10 @@ async def xz_handler(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     if event.data is None:
         return
-
+    
     cd = event.data
     evaluation = (
         EvaluationType.OK if cd == "select_ok" else EvaluationType.COOL
@@ -289,8 +291,13 @@ async def accept_homework_handler(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     state_data = await state.get_data()
+    if msg_id_ := state_data.get("msg_id"):
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(
+                chat_id=event.message.chat.id, message_id=msg_id_
+            )
     await homework_repository.update_type(
         UpdatingTypeByIdDTO(
             db_id=state_data["homework_db_id"],
@@ -299,7 +306,7 @@ async def accept_homework_handler(
     )
     await bot.send_message(
         chat_id=state_data["telegram_chat_id"],
-        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был принят',
+        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> была принята',
     )
     await message.edit_text(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
@@ -322,7 +329,7 @@ async def revision_homework_handler(
     message = event.message
     if isinstance(message, InaccessibleMessage):
         return
-
+    
     await message.edit_text("Пришли комментарий")
     await state.set_state(AdminHomeWorksState.ask_comments)
     await state.update_data(msg_id=event.message.message_id)
@@ -341,19 +348,26 @@ async def ask_comments_handler(
 ) -> None:
     if event.text is None:
         return
-
+    
     comments = event.text
+    await event.delete()
     state_data = await state.get_data()
+    if msg_id_ := state_data.get("msg_id"):
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(
+                chat_id=event.message.chat.id, message_id=msg_id_
+            )
     await homework_repository.update_type_and_comment(
         UpdatingTypeAndCommentByIdDTO(
             db_id=state_data["homework_db_id"],
             status_type=HomeWorkStatusType.UNDER_REVISION,
-            comments=comments,
+            comments=comments
         )
     )
     await bot.send_message(
         chat_id=state_data["telegram_chat_id"],
-        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был отправлен с комментарием:\n{comments}',
+        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был отправлен с комментарием:\n'
+             f'{comments}',
     )
     await event.answer(
         "Админка",

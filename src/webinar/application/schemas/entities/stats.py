@@ -11,7 +11,7 @@ STATS_TEXT = """
 Смм: {users_smm}
 Копирайтинг: {users_copyrighting}
 
-Сдано заданий:
+Сдана заданий:
  Смм:
   Всего: {smm}
   Базовый модуль: {smm_first}

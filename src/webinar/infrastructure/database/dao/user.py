@@ -262,7 +262,7 @@ class UserDAOImpl(AbstractUserDAO, BaseDAO):
                 for data_2 in raw_data_2:
                     raw_status_type = data_2.get("status_type")
                     if data_2['number'] == 7:
-                        status_type = (data_2['evaluation'] or 'Не оценен').title()
+                        status_type = (data_2['evaluation'] or 'Не оценена').title()
                     else:
                         status_type = (
                             HOMEWORK_RU[HomeWorkStatusType(raw_status_type)]

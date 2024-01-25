@@ -33,7 +33,7 @@ HOMEWORKS_TEXT_FROM_SPREADSHEETS = {
 }
 
 HOMEWORK_RU: Final = {
-    HomeWorkStatusType.ACCEPTED: "Сдано",
+    HomeWorkStatusType.ACCEPTED: "Сдана",
     HomeWorkStatusType.UNDER_INSPECTION: "На проверке",
     HomeWorkStatusType.UNDER_REVISION: "На доработке",
 }
