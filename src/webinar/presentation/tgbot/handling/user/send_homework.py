@@ -4,6 +4,7 @@ from typing import cast
 
 from aiogram import Bot, F, Router
 from aiogram.enums import MessageEntityType
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
@@ -62,9 +63,10 @@ async def select_homework_number(
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
         if msg_id != event.message.message_id:
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id
+                )
     homeworks_dto = TelegramUserIdDTO(TelegramUserId(event.from_user.id))
     try:
         homeworks = await homework_repository.read_all_by_telegram_user_id(

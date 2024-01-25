@@ -85,6 +85,8 @@ class GoogleSheetsAdapter:
         raw_data: list[UpdateUserDataGoogleSheetsDto],
     ) -> None:
         worksheet = await self.worksheet(work_sheet_id)
+        await worksheet.clear()
+        await self._set_column_name(worksheet)
         datas = [
             [user.sup, user.email, user.telegram_user_id, *user.homeworks_data]
             for user in raw_data
