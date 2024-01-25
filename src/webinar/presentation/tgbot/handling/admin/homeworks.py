@@ -12,6 +12,7 @@ from webinar.application.schemas.dto.homework import (
     UpdatingTypeAndCommentByIdDTO,
     UpdatingTypeByIdDTO,
 )
+from webinar.application.schemas.entities.homework import HOMEWORKS_TEXT_FROM_SPREADSHEETS
 from webinar.application.schemas.enums.direction_type import (
     DirectionTrainingType,
 )
@@ -298,7 +299,7 @@ async def accept_homework_handler(
     )
     await bot.send_message(
         chat_id=state_data["telegram_chat_id"],
-        text=f'Домашнее задание {state_data["number"]} был принят',
+        text=f'Д<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был принят',
     )
     await message.edit_text(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
@@ -352,7 +353,7 @@ async def ask_comments_handler(
     )
     await bot.send_message(
         chat_id=state_data["telegram_chat_id"],
-        text=f'<u>Домашнее задание {state_data["number"]}</u> был отправлен с комментарием:\n{comments}',
+        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был отправлен с комментарием:\n{comments}',
     )
     await event.answer(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)

@@ -156,7 +156,7 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
             FROM admins AS a
                 JOIN users AS u
                 ON u.db_id = a.db_user_id
-            WHERE u.direction_training = ANY(%s);
+            WHERE a.direction_training = ANY(%s);
         """
         async with self.connect.cursor() as cursor:
             await cursor.execute(sql, astuple(model))
@@ -257,7 +257,6 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
                 u.telegram_user_id,
                 u.telegram_chat_id,
                 u.date_time_registration,
-                u.direction_training,
                 u.email,
                 u.surname,
                 u.name,

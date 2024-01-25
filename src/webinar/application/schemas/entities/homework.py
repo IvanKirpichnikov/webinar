@@ -22,6 +22,15 @@ HOMEWORKS_TEXT = {
     6: 'Специализация №4',
     7: 'Проект'
 }
+HOMEWORKS_TEXT_FROM_SPREADSHEETS = {
+    1: 'Базовый модуль Практическая работа №1',
+    2: 'Базовый модуль Практическая работа №2',
+    3: 'Специализация Практическая работа №1',
+    4: 'Специализация Практическая работа №2',
+    5: 'Специализация Практическая работа №3',
+    6: 'Специализация Практическая работа №4',
+    7: 'Специализация Практическая работа №5 проект'
+}
 
 HOMEWORK_RU: Final = {
     HomeWorkStatusType.ACCEPTED: "Сдано",
@@ -63,7 +72,7 @@ class HomeWorkEntity:
         
         if evaluation:
             return f"{status_type} {number} {date_time} {url}\n Оценка: {evaluation.lower()}"
-        if comments:
+        if commentsё:
             return f"{status_type} {number} {date_time} {url}\n{html.quote(comments)}"
         return f"{status_type} {number} {date_time} {url}"
 

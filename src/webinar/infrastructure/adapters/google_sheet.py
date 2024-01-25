@@ -12,18 +12,9 @@ from gspread_asyncio import (
 )
 
 from webinar.application.schemas.dto.user import UpdateUserDataGoogleSheetsDto
+from webinar.application.schemas.entities.homework import HOMEWORKS_TEXT_FROM_SPREADSHEETS
 from webinar.application.schemas.enums.google_sheets import WorkSheetId
 
-
-HOMEWORKS_TEXT_FROM_SPREADSHEETS = {
-    1: 'Базовый модуль Практическая работа №1',
-    2: 'Базовый модуль Практическая работа №2',
-    3: 'Специализация Практическая работа №1',
-    4: 'Специализация Практическая работа №2',
-    5: 'Специализация Практическая работа №3',
-    6: 'Специализация Практическая работа №4',
-    7: 'Специализация Практическая работа №5 проект'
-}
 
 
 class GoogleSheetsAdapter:
