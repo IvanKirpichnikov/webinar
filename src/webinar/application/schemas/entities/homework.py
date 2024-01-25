@@ -72,7 +72,7 @@ class HomeWorkEntity:
         
         if evaluation:
             return f"{status_type} {number} {date_time} {url}\n Оценка: {evaluation.lower()}"
-        if commentsё:
+        if comments:
             return f"{status_type} {number} {date_time} {url}\n{html.quote(comments)}"
         return f"{status_type} {number} {date_time} {url}"
 
