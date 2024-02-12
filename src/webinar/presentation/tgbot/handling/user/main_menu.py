@@ -23,7 +23,7 @@ async def main_menu_message_handler(
     event: Message, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
     await event.answer(
-        "Главное меню\n\nРазработка: @y_thirteen_y",
+        "Главное меню",
         reply_markup=keyboard.inline.main_menu()
     )
     await state.clear()
@@ -40,7 +40,7 @@ async def main_menu_callback_handler(
         return None
     
     await event.message.edit_text(
-        "Главное меню\n\nРазработка: @y_thirteen_y",
+        "Главное меню",
         reply_markup=keyboard.inline.main_menu()
     )
     await state.clear()

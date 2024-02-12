@@ -260,5 +260,5 @@ async def finish_handler(
         await event.delete()
     
     await event.answer(
-        "Главное меню\n\nРазработка: @y_thirteen_y", reply_markup=keyboard.inline.main_menu()
+        "Главное меню", reply_markup=keyboard.inline.main_menu()
     )
