@@ -182,7 +182,7 @@ class InlineKeyboardFactory:
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
     def select_direction_training_for(
-        self, user_id: TelegramUserId
+        self, user_id: TelegramUserId, url: bool = False
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         buttons_data = [
@@ -196,9 +196,12 @@ class InlineKeyboardFactory:
                     type=DirectionTrainingType.COPYRIGHTING
                 ),
             ),
-            dict(text="Аккаунт", url=f"tg://user?id={user_id}"),
             dict(text="Назад", callback_data="add_admin"),
         ]
+        if url:
+            buttons_data.insert(
+                2, dict(text="Аккаунт", url=f"tg://user?id={user_id}")
+            )
         for data in buttons_data:
             builder.button(**data)
         
@@ -233,7 +236,7 @@ class InlineKeyboardFactory:
         )
     
     def check_homework(
-        self, telegram_user_id: TelegramUserId, evaluation: bool = False
+        self, telegram_user_id: TelegramUserId, evaluation: bool = False, url: bool = False
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         if evaluation:
@@ -244,7 +247,8 @@ class InlineKeyboardFactory:
         else:
             buttons_data = [("Принять работу", "accept_homework")]
         buttons_data.append(("На доработку", "revision_homework"))
-        buttons_data.append(("Аккаунт", f"tg://user?id={telegram_user_id}"))
+        if url:
+            buttons_data.append(("Аккаунт", f"tg://user?id={telegram_user_id}"))
         buttons_data.append(("Назад", "homeworks"))
         
         for text, callback_data in buttons_data:
@@ -258,7 +262,7 @@ class InlineKeyboardFactory:
     @lru_cache()
     def send_answer_question(
         self, chat_id: TelegramChatId, number_question: int,
-        user_id: int
+        user_id: int, url: bool = False
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         builder.button(
@@ -267,8 +271,9 @@ class InlineKeyboardFactory:
                 number_question=number_question, chat_id=chat_id
             ),
         )
-        builder.button(
-            text="Аккаунт",
-            url=f"tg://user?id={user_id}"
-        )
+        if url:
+            builder.button(
+                text="Аккаунт",
+                url=f"tg://user?id={user_id}"
+            )
         return builder.as_markup()
