@@ -23,7 +23,7 @@ async def main_menu_message_handler(
     event: Message, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
     await event.answer(
-        "Главное меню",
+        "Главное меню\n\nРазработка: @y_thirteen_y",
         reply_markup=keyboard.inline.main_menu()
     )
     await state.clear()
@@ -36,10 +36,11 @@ async def main_menu_callback_handler(
     if event.message is None:
         return None
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return None
     
     await event.message.edit_text(
-        "Главное меню",
+        "Главное меню\n\nРазработка: @y_thirteen_y",
         reply_markup=keyboard.inline.main_menu()
     )
     await state.clear()

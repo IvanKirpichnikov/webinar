@@ -58,6 +58,7 @@ async def select_homework_number(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
 
     state_data = await state.get_data()
@@ -110,6 +111,7 @@ async def ask_url_homework_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
 
     await event.message.edit_text(
@@ -132,12 +134,14 @@ async def not_valid_url(
 ) -> None:
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     msg = await event.answer(
-        "Вы отправили не правильную ссылку",
+        "Вы отправили неправильную ссылку",
         reply_markup=keyboard.inline.back("send_homework"),
     )
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     await state.update_data(msg_id=msg.message_id)
     return None
 
@@ -168,7 +172,8 @@ async def add_homework_handler(
 
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     number = state_data["number"]
     with suppress(UniqueViolation):
         await homework_repository.create(
@@ -181,8 +186,9 @@ async def add_homework_handler(
             )
         )
     await event.answer(
-        "Задание успешно сдана", reply_markup=keyboard.inline.main_menu()
+        "<b>Работа отправлена на проверку</b>", reply_markup=keyboard.inline.main_menu()
     )
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     await state.clear()
     return None

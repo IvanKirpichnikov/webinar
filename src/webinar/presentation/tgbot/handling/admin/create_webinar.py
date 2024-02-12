@@ -1,5 +1,8 @@
+from contextlib import suppress
+
 from aiogram import Bot, F, Router
 from aiogram.enums import MessageEntityType
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
@@ -59,8 +62,10 @@ async def ask_webinar_name(
     url = url_entity.extract_from(event.text)
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
-    await event.delete()
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+    with suppress(TelegramBadRequest):
+        await event.delete()
     msg = await event.answer(
         'Пришли дату вебинара и ФИО лектора.\nФормат: "20.07 Иванов И.И."',
         reply_markup=keyboard.inline.back("publish_webinar_recording"),
@@ -83,7 +88,8 @@ async def get_webinar_name_handler(
 
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     try:
         await webinar_repository.create(
             CreateWebinarDTO(url=state_data["url"], name=event.text)
@@ -101,5 +107,6 @@ async def get_webinar_name_handler(
         "Вебинар добавлен",
         reply_markup=keyboard.inline.admin_main_menu(is_super_admin),
     )
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     await state.clear()

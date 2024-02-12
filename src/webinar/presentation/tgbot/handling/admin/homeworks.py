@@ -295,9 +295,10 @@ async def accept_homework_handler(
     state_data = await state.get_data()
     if msg_id_ := state_data.get("msg_id"):
         with suppress(TelegramBadRequest):
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id_
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id_
+                )
     await homework_repository.update_type(
         UpdatingTypeByIdDTO(
             db_id=state_data["homework_db_id"],
@@ -350,12 +351,13 @@ async def ask_comments_handler(
         return
     
     comments = event.text
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     state_data = await state.get_data()
     if msg_id_ := state_data.get("msg_id"):
         with suppress(TelegramBadRequest):
             await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id_
+                chat_id=event.chat.id, message_id=msg_id_
             )
     await homework_repository.update_type_and_comment(
         UpdatingTypeAndCommentByIdDTO(

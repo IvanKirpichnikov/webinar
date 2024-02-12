@@ -6,8 +6,8 @@ Requires=nats-server.service
 [Service]
 Type=simple
 User=webinar-app
-WorkingDirectory=/home/webinar-app/webinar-bot/
-ExecStart=/home/webinar-app/webinar-bot/venv/bin/webinar-bot --start tgbot
+WorkingDirectory=/home/webinar-user/webinar/
+ExecStart=/home/webinar/webinar/venv/bin/webinar-bot --start tgbot
 Restart=always
 
 [Install]

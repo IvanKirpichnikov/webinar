@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import and_f, or_f
@@ -35,7 +37,8 @@ async def send_question_callback_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        return
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
+        returnR
     
     question_number = callback_data.number_question
     msg = await event.message.answer(
@@ -64,14 +67,16 @@ async def back(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     state_data = await state.get_data()
     msg_id = state_data['msg_id']
-    await bot.delete_message(
-        chat_id=event.message.chat.id,
-        message_id=msg_id
-    )
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(
+            chat_id=event.message.chat.id,
+            message_id=msg_id
+        )
     await state.clear()
 
 
@@ -98,13 +103,14 @@ async def send_question_message_handler(
         return None
     question_msg_id = data['question_msg_id']
     msg_id = data['msg_id']
-    await bot.delete_messages(
-        chat_id=event.chat.id,
-        message_ids=[
-            msg_id, question_msg_id
-        ]
-    )
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await bot.delete_messages(
+            chat_id=event.chat.id,
+            message_ids=[
+                msg_id, question_msg_id
+            ]
+        )
+        await event.delete()
     await event.answer(
         "Ответ был успешно отправлен", reply_markup=reply_markup
     )

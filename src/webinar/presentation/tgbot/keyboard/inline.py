@@ -150,8 +150,15 @@ class InlineKeyboardFactory:
         builder = self.builder
         for homework in model.homeworks:
             if homework.status_type == HomeWorkStatusType.UNDER_REVISION:
+                number = homework.number
+                if number in {1, 2}:
+                    a = f'Б №{number}'
+                elif number in {3, 4, 5, 6}:
+                    a = f'C №{number - 2}'
+                else:
+                    a = 'Проект'
                 builder.button(
-                    text=f"№{homework.number} Отправить на проверку",
+                    text=f"{a} Отправить на проверку",
                     callback_data=ReCheckingHomework(db_id=homework.db_id),
                 )
         builder.button(text="Назад", callback_data="main_menu")
@@ -174,7 +181,6 @@ class InlineKeyboardFactory:
         
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
-    @lru_cache(typed=True)
     def select_direction_training_for(
         self, user_id: TelegramUserId
     ) -> InlineKeyboardMarkup:

@@ -1,7 +1,9 @@
+from contextlib import suppress
 from datetime import datetime
 
 from aiogram import Bot, F, Router
 from aiogram.enums import MessageEntityType
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import and_f, CommandStart, or_f, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
@@ -62,8 +64,9 @@ async def ask_direction_callback_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
-
+    
     await event.message.edit_text(
         "Здравствуйте, слушатель!\n" "Выберите направление",
         reply_markup=keyboard.inline.directions(),
@@ -71,9 +74,10 @@ async def ask_direction_callback_handler(
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
         if msg_id != event.message.message_id:
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id
+                )
     await state.set_state(RegisteringState.ask_direction)
 
 
@@ -91,8 +95,9 @@ async def ask_sup_callback_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
-
+    
     data = await state.get_data()
     await event.message.edit_text(
         (
@@ -107,12 +112,13 @@ async def ask_sup_callback_handler(
         await state.update_data(
             direction=callback_data.type, msg_id=event.message.message_id
         )
-
+    
     if msg_id := data.get("msg_id"):
         if msg_id != event.message.message_id:
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id
+                )
     await state.set_state(RegisteringState.ask_sup)
 
 
@@ -126,8 +132,9 @@ async def ask_sup_callback_handler_sup(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
-
+    
     await event.message.edit_text(
         (
             "Введите ФИО в следующем формате: Ф И О\n"
@@ -139,9 +146,10 @@ async def ask_sup_callback_handler_sup(
     data = await state.get_data()
     if msg_id := data.get("msg_id"):
         if msg_id != event.message.message_id:
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id
+                )
     await state.update_data(msg_id=event.message.message_id)
     await state.set_state(RegisteringState.ask_sup)
 
@@ -150,7 +158,8 @@ async def ask_sup_callback_handler_sup(
 async def not_valid_sup(
     event: Message, bot: Bot, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     msg = await event.answer(
         (
             "Введите ФИО в следующем формате: Ф И О\n"
@@ -161,7 +170,8 @@ async def not_valid_sup(
     )
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     await state.update_data(msg_id=msg.message_id)
     await state.set_state(RegisteringState.ask_sup)
 
@@ -170,14 +180,16 @@ async def not_valid_sup(
 async def ask_email_handler(
     event: Message, bot: Bot, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     msg = await event.answer(
         "Пришлите почту, которую вы указывали при регистрации на курс.",
         reply_markup=keyboard.inline.back("send_sup"),
     )
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     await state.update_data(sup=event.text, msg_id=msg.message_id)
     await state.set_state(RegisteringState.ask_email)
 
@@ -195,7 +207,8 @@ async def not_valid_email(
     )
     data = await state.get_data()
     if msg_id := data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     await state.update_data(msg_id=msg.message_id)
 
 
@@ -219,16 +232,17 @@ async def finish_handler(
         return
     if event.from_user is None:
         return
-
+    
     state_data = await state.get_data()
     chat_id = TelegramChatId(event.chat.id)
     user_id = TelegramUserId(event.from_user.id)
     email = email_entity.extract_from(event.text)
     direction = state_data["direction"]
     surname, name, patronymic = get_sup(state_data["sup"])
-
+    
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     await user_repository.create(
         CreateUserDTO(
             telegram_user_id=user_id,
@@ -242,7 +256,9 @@ async def finish_handler(
         )
     )
     cache.exists_user[user_id] = ResultExistsDTO(True)
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
+    
     await event.answer(
-        "Главное меню", reply_markup=keyboard.inline.main_menu()
+        "Главное меню\n\nРазработка: @y_thirteen_y", reply_markup=keyboard.inline.main_menu()
     )

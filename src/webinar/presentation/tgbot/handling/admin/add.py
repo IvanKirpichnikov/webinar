@@ -64,6 +64,7 @@ async def ask_user_id(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     state_data = await state.get_data()
@@ -127,7 +128,8 @@ async def ask_webinar_type(
     
     state_data = await state.get_data()
     if msg_id_ := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id_)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id_)
     try:
         msg = await event.answer(
             "Вы хотите добавить этого юзера?\nЗа какое направление он будет отвечает?",
@@ -142,7 +144,8 @@ async def ask_webinar_type(
         )
         await state.set_data({"msg_id": msg.message_id})
         return
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     await state.set_data({"msg_id": msg.message_id, "user_id": user_id})
     await state.set_state(AddAdminState.ask_webinar_type)
 
@@ -163,9 +166,10 @@ async def ask_range_or_numb_handler(
     
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(
-            chat_id=event.message.chat.id, message_id=msg_id
-        )
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(
+                chat_id=event.message.chat.id, message_id=msg_id
+            )
     msg = await message.answer(
         "Введи диапазон букв или выбери числовой диапазон. Диапазон букв А-В",
         reply_markup=keyboard.reply.save(),
@@ -191,7 +195,8 @@ async def get_word_range(
     
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     user_id = TelegramUserId(state_data["user_id"])
     if event.text == "Числовой диапазон":
         model = CreateAdminDTO(
@@ -238,5 +243,6 @@ async def get_word_range(
     cache.exists_admin[TelegramUserId(event.from_user.id)] = ResultExistsDTO(
         True
     )
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     await state.clear()

@@ -47,6 +47,7 @@ async def technical_support_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -81,6 +82,7 @@ async def i_can_log_into_platform_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -95,6 +97,7 @@ async def doesnt_load_lessons_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -111,6 +114,7 @@ async def can_reset_password_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(

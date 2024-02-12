@@ -58,9 +58,11 @@ async def v_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
+    with suppress(TelegramBadRequest):
+        await event.message.delete()
     
-    await event.message.delete()
     state_data = await state.get_data()
     msg = await event.message.answer(
         text="Пришли свой вопрос. Можете добавить фото или видео",
@@ -75,14 +77,16 @@ async def v_handler(
     
     if msg_id_1 := state_data.get("msg_id"):
         if msg_id_1 != event.message.message_id:
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id_1
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id_1
+                )
     if msg_id_2 := state_data.get("msg_id_2"):
         if msg_id_2 != event.message.message_id:
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id_2
-            )
+            with suppress(TelegramBadRequest):
+                await bot.delete_message(
+                    chat_id=event.message.chat.id, message_id=msg_id_2
+                )
     
     await state.update_data(msg_id=msg.message_id)
     await state.set_state(SendYourQuestion.ask_question)
@@ -109,15 +113,16 @@ async def get_question_handler(
     
     state_data = await state.get_data()
     if msg_id := state_data.get("msg_id"):
-        await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
+        with suppress(TelegramBadRequest):
+            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
     
     number_question = randint(1000, 9999)
     text = f'Ваш вопрос. Номер #q{number_question} \n"{question_text}"'
     reply_markup = keyboard.inline.send_question("technical_support")
     new_event = event.model_copy(update={text_attr: text}).as_(bot)
     await new_event.send_copy(chat_id=event.chat.id, reply_markup=reply_markup)
-    
-    await event.delete()
+    with suppress(TelegramBadRequest):
+        await event.delete()
     await state.set_state(SendYourQuestion.ask_confirmation_send)
     await state.update_data(
         number_question=number_question,
@@ -141,6 +146,7 @@ async def send_question_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     telegram_user_id = TelegramUserId(event.from_user.id)
     telegram_user_id_dto = TelegramUserIdDTO(telegram_user_id)

@@ -37,6 +37,7 @@ async def my_homeworks_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     dto = TelegramUserIdDTO(TelegramUserId(event.from_user.id))

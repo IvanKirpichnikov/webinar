@@ -32,6 +32,7 @@ async def admin_menu_callback_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
 
     await event.message.edit_text(

@@ -38,6 +38,7 @@ async def webinar_recordings_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
 
     count_webinars_button = config.config.const.count_webinars_button
@@ -73,6 +74,7 @@ async def webinar_pagination_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
+        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
 
     state_data = await state.get_data()
