@@ -188,22 +188,19 @@ async def send_question_handler(
     
     try:
         await new_model.send_copy(chat_id=admin_chat_id)
-    except TelegramBadRequest as e:
-        if 'BUTTON_USER_INVALID' in e.message:
-            new_model = event.message.model_copy(
-                update={
-                    state_data['text_attr']: text,
-                    'reply_markup': keyboard.inline.send_answer_question(
-                        chat_id=TelegramChatId(chat_id),
-                        number_question=number_question,
-                        user_id=event.from_user.id,
-                        url=True
-                    )
-                }
-            ).as_(bot)
-            await new_model.send_copy(chat_id=admin_chat_id)
-        else:
-            raise
+    except TelegramBadRequest:
+        new_model = event.message.model_copy(
+            update={
+                state_data['text_attr']: text,
+                'reply_markup': keyboard.inline.send_answer_question(
+                    chat_id=TelegramChatId(chat_id),
+                    number_question=number_question,
+                    user_id=event.from_user.id,
+                    url=True
+                )
+            }
+        ).as_(bot)
+        await new_model.send_copy(chat_id=admin_chat_id)
     await event.message.edit_reply_markup()
     await event.message.answer(
         f"Ваш вопрос был отправлен. Номер вопроса: #q{number_question} \nГлавное меню.",

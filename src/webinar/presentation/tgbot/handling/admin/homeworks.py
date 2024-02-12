@@ -230,22 +230,19 @@ async def select_homework_handler(
             ),
             disable_web_page_preview=True,
         )
-    except TelegramBadRequest as e:
-        if 'BUTTON_USER_INVALID' in e.message:
-            await message.edit_text(
-                f"Работа {sup}\n{model.email}\n"
-                f"Направление: {model.direction_training}\n"
-                f"Сдана: {date_time}\n"
-                f"Ссылка: {model.url}",
-                reply_markup=keyboard.inline.check_homework(
-                    model.telegram_user_id,
-                    True if model.number == 7 else False,
-                    True
-                ),
-                disable_web_page_preview=True,
-            )
-        else:
-            raise
+    except TelegramBadRequest:
+        await message.edit_text(
+            f"Работа {sup}\n{model.email}\n"
+            f"Направление: {model.direction_training}\n"
+            f"Сдана: {date_time}\n"
+            f"Ссылка: {model.url}",
+            reply_markup=keyboard.inline.check_homework(
+                model.telegram_user_id,
+                True if model.number == 7 else False,
+                True
+            ),
+            disable_web_page_preview=True,
+        )
     await state.set_state(AdminHomeWorksState.select_homework)
     await state.update_data(
         homework_db_id=homework_db_id,

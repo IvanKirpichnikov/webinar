@@ -138,16 +138,13 @@ async def ask_webinar_type(
                     user_id
                 ),
             )
-        except TelegramBadRequest as e:
-            if 'BUTTON_USER_INVALID' in e.message:
-                msg = await event.answer(
-                    "Вы хотите добавить этого юзера?\nЗа какое направление он будет отвечает?",
-                    reply_markup=keyboard.inline.select_direction_training_for(
-                        user_id, True
-                    ),
-                )
-            else:
-                raise
+        except TelegramBadRequest:
+            msg = await event.answer(
+                "Вы хотите добавить этого юзера?\nЗа какое направление он будет отвечает?",
+                reply_markup=keyboard.inline.select_direction_training_for(
+                    user_id, True
+                ),
+            )
     except TelegramBadRequest:
         msg = await event.answer(
             "Пользователь с данным user_id не писал боту",
