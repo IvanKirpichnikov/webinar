@@ -46,7 +46,7 @@ class RepositoryMiddlewareImpl(BaseMiddleware):
     ) -> Any:
         if get_flag(data, "repo_uow") is None:
             return await handler(event, data)
-        async with data['pool'].connection() as conn:
+        async with data['psql_pool'].connection() as conn:
             conn.row_factory = dict_row
             uow = UnitOfWorkRepositoryImpl(conn)
             setup_repository(data, conn)
