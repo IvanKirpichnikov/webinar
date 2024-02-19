@@ -1,18 +1,16 @@
 from psycopg import AsyncConnection
-from psycopg.rows import (
-    dict_row,
-    DictRow
-)
+from psycopg.rows import DictRow
+from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.config import ConfigFactory
 
 
-async def setup() -> tuple[AsyncConnection[DictRow], ConfigFactory]:
+async def setup() -> tuple[AsyncConnectionPool[AsyncConnection[DictRow]], ConfigFactory]:
     config_factory = ConfigFactory()
     config = config_factory.config
     
-    psql_connect = await AsyncConnection.connect(
+    psql_pool = AsyncConnectionPool(
         config.psql.url,
-        row_factory=dict_row
+        open=True,
     )
-    return psql_connect, config_factory
+    return psql_pool, config_factory

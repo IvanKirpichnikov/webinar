@@ -2,6 +2,7 @@ from faststream import FastStream
 from faststream.nats import NatsBroker
 from psycopg import AsyncConnection
 from psycopg.rows import DictRow
+from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.config import ConfigFactory
 from webinar.presentation.broker_message.di import (
@@ -12,7 +13,7 @@ from webinar.presentation.broker_message.handlers.main import route
 
 
 async def broker_message(
-    connect: AsyncConnection[DictRow],
+    pool: AsyncConnectionPool[AsyncConnection[DictRow]],
     config_factory: ConfigFactory
 ) -> None:
     config = ConfigFactory().config
@@ -24,6 +25,6 @@ async def broker_message(
     app.on_startup(setup_context)
     app.on_shutdown(close_connect)
     app.context.set_global("config", config_factory)
-    app.context.set_global("connect", connect)
+    app.context.set_global("pool", pool)
     
     return await app.run()

@@ -6,19 +6,22 @@ from uuid import uuid4
 from aiogram import Bot
 from aiogram.exceptions import (
     TelegramBadRequest,
-    TelegramRetryAfter
+    TelegramRetryAfter,
 )
 from faststream import (
     Context,
-    Path
+    Path,
 )
 from faststream.nats import (
     NatsRouter
 )
 from faststream.nats.annotations import (
     NatsBroker as NatsBrokerAnn,
-    NatsMessage
+    NatsMessage,
 )
+from psycopg import AsyncConnection
+from psycopg.rows import DictRow
+from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.exceptions import NotFoundUsers
 from webinar.application.schemas.dto.common import DirectionsTrainingDTO
@@ -34,7 +37,7 @@ route = NatsRouter()
 async def start_mailing(
     msg: dict[str, Any],
     broker: NatsBrokerAnn,
-    user_repository: UserRepositoryImpl = Context(),
+    pool: AsyncConnectionPool[AsyncConnection[DictRow]] = Context(),
 ) -> None:
     admin_chat_id = msg["admin_chat_id"]
     mailing_msg_id = msg["mailing_msg_id"]
@@ -47,9 +50,10 @@ async def start_mailing(
             DirectionTrainingType.COPYRIGHTING,
         ]
     try:
-        user_entities = await user_repository.read_all_by_direction_training(
-            DirectionsTrainingDTO(direction_trainings)
-        )
+        async with pool.connection() as connect:
+            user_entities = await UserRepositoryImpl(connect).read_all_by_direction_training(
+                DirectionsTrainingDTO(direction_trainings)
+            )
     except NotFoundUsers:
         return None
     

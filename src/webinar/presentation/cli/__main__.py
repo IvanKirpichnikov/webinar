@@ -12,7 +12,7 @@ def start_handler(arg: str) -> None:
         return asyncio.run(start.broker_message())
     if arg == "application":
         return asyncio.run(start.application())
-    raise ValueError
+    raise KeyError
 
 
 def main() -> None:
@@ -27,7 +27,7 @@ def main() -> None:
     if start_arg := args.start:
         try:
             start_handler(start_arg)
-        except ValueError:
+        except KeyError:
             argparse.error("not found start argument: %s" % (start_arg,))
     return None
 

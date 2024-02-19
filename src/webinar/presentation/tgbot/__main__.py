@@ -10,6 +10,7 @@ from aiogram.fsm.storage.memory import (
 from faststream.nats import NatsBroker
 from psycopg import AsyncConnection
 from psycopg.rows import DictRow
+from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.config import ConfigFactory
 from webinar.infrastructure.adapters.cache import CacheStore
@@ -19,7 +20,7 @@ from webinar.presentation.tgbot.utils.setup import setup_app
 
 
 async def tgbot(
-    psql_connect: AsyncConnection[DictRow],
+    psql_pool: AsyncConnectionPool[AsyncConnection[DictRow]],
     config_factory: ConfigFactory
 ) -> None:
     config = config_factory.config
@@ -38,9 +39,9 @@ async def tgbot(
         disp,
         cache,
         config_factory,
-        psql_connect,
+        psql_pool,
         NatsBroker(config.nats.url)
     )
-    await create_other_database(psql_connect)
+    await create_other_database(psql_pool)
     
     return await disp.start_polling(bot)

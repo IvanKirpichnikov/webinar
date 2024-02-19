@@ -1,5 +1,8 @@
 from faststream import Context
 from faststream.nats import NatsRouter
+from psycopg import AsyncConnection
+from psycopg.rows import DictRow
+from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.schemas.dto.common import DirectionTrainingDTO
 from webinar.application.schemas.enums.direction_type import (
@@ -17,17 +20,18 @@ route = NatsRouter()
 async def update_data_handler(
     _: str,
     google_sheet: GoogleSheetsAdapter = Context(),
-    user_repository: UserRepositoryImpl = Context(),
+    pool: AsyncConnectionPool[AsyncConnection[DictRow]] = Context(),
 ) -> None:
     training_types = [
         (DirectionTrainingType.SMM, WorkSheetId.SMM),
         (DirectionTrainingType.COPYRIGHTING, WorkSheetId.COPYRIGHTING)
     ]
-    for training_type, work_sheet_id in training_types:
-        dto = DirectionTrainingDTO(training_type)
-        data = await user_repository.read_user_and_he_homeworks(dto)
-        await google_sheet.update_data(
-            work_sheet_id=work_sheet_id,
-            raw_data=data
-        )
+    async with pool.connection() as connect:
+        for training_type, work_sheet_id in training_types:
+            dto = DirectionTrainingDTO(training_type)
+            data = await UserRepositoryImpl(connect).read_user_and_he_homeworks(dto)
+            await google_sheet.update_data(
+                work_sheet_id=work_sheet_id,
+                raw_data=data
+            )
     await google_sheet.create_worksheet_and_set_names()
