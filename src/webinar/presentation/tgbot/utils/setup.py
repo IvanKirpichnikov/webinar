@@ -22,9 +22,9 @@ async def setup_adapters(disp: Dispatcher, cache: CacheStore) -> None:
 
 
 def setup_middleware(
-    disp: Dispatcher, connect: AsyncConnection[DictRow]
+    disp: Dispatcher, pool: AsyncConnectionPool[AsyncConnection[DictRow]]
 ) -> None:
-    uow_middleware = RepositoryMiddlewareImpl(connect)
+    uow_middleware = RepositoryMiddlewareImpl(pool)
     is_admin_middleware = IsSuperAdminMiddlewareImpl()
     disp.update.middleware(is_admin_middleware)
     disp.message.middleware(uow_middleware)
@@ -53,5 +53,5 @@ async def setup_app(
     setup_factory(disp, config_)
     await setup_faststream(disp, broker)
     setup_connections(disp, pool)
-    setup_middleware(disp, psql_connect)
+    setup_middleware(disp, pool)
     await setup_adapters(disp, cache)

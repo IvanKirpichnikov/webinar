@@ -9,6 +9,7 @@ from aiogram.dispatcher.flags import get_flag
 from aiogram.types import TelegramObject
 from psycopg import AsyncConnection
 from psycopg.rows import dict_row, DictRow
+from psycopg_pool import AsyncConnectionPool
 
 from webinar.infrastructure.database.repository.admin import AdminRepositoryImpl
 from webinar.infrastructure.database.repository.homework import HomeWorkRepositoryImpl
@@ -34,8 +35,8 @@ def setup_repository(
 
 
 class RepositoryMiddlewareImpl(BaseMiddleware):
-    def __init__(self, connect: AsyncConnection[DictRow]) -> None:
-        self.uow = UnitOfWorkRepositoryImpl(connect)
+    def __init__(self, pool: AsyncConnectionPool[AsyncConnection[DictRow]]) -> None:
+        self.pool = pool
     
     async def __call__(
         self,
@@ -45,14 +46,14 @@ class RepositoryMiddlewareImpl(BaseMiddleware):
     ) -> Any:
         if get_flag(data, "repo_uow") is None:
             return await handler(event, data)
-        
         async with data['pool'].connection() as conn:
             conn.row_factory = dict_row
+            uow = UnitOfWorkRepositoryImpl(conn)
             setup_repository(data, conn)
             try:
                 await handler(event, data)
             except Exception as e:
-                await self.uow.rollback()
+                await uow.rollback()
                 raise e
             else:
-                await self.uow.commit()
+                await uow.commit()
