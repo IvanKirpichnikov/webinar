@@ -44,8 +44,6 @@ class RepositoryMiddlewareImpl(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        if get_flag(data, "repo_uow") is None:
-            return await handler(event, data)
         async with data['psql_pool'].connection() as conn:
             conn.row_factory = dict_row
             uow = UnitOfWorkRepositoryImpl(conn)
