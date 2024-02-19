@@ -27,8 +27,8 @@ def setup_middleware(
     uow_middleware = RepositoryMiddlewareImpl(pool)
     is_admin_middleware = IsSuperAdminMiddlewareImpl()
     disp.update.middleware(is_admin_middleware)
-    disp.message.middleware(uow_middleware)
-    disp.callback_query.middleware(uow_middleware)
+    disp.message.outer_middleware(uow_middleware)
+    disp.callback_query.outer_middleware(uow_middleware)
     disp.callback_query.middleware(CallbackAnswerMiddleware())
 
 
