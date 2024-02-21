@@ -17,7 +17,8 @@ async def admin_menu_message_handler(
     is_super_admin: bool,
 ) -> None:
     await event.answer(
-        "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
+        "Админка",
+        reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
     )
     await state.clear()
 

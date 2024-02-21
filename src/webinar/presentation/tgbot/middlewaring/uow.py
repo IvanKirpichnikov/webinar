@@ -5,7 +5,6 @@ from typing import (
 )
 
 from aiogram import BaseMiddleware
-from aiogram.dispatcher.flags import get_flag
 from aiogram.types import TelegramObject
 from psycopg import AsyncConnection
 from psycopg.rows import dict_row, DictRow

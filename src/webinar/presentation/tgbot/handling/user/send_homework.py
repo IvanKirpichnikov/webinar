@@ -148,7 +148,7 @@ async def not_valid_url(
 
 @route.message(
     AskHomeWorkState.ask_url,
-    F.entities.extract(F.type == MessageEntityType.URL)[-1].as_("url_entity"),
+    F.entities.extract(F.type == MessageEntityType.URL)[0].as_("url_entity"),
     flags=dict(repo_uow=True),
 )
 async def add_homework_handler(

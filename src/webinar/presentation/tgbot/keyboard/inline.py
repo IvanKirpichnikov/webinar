@@ -141,7 +141,6 @@ class InlineKeyboardFactory:
                 callback_data=SelectHomeWorkByNumber(number=number),
             )
         builder.button(text="Назад", callback_data="main_menu")
-        print(builder)
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
     def under_revision_homeworks(

@@ -1,9 +1,10 @@
 from contextlib import suppress
 
 from aiogram import Bot, F, Router
+from aiogram.filters import ExceptionTypeFilter
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InaccessibleMessage, Message
+from aiogram.types import CallbackQuery, ErrorEvent, InaccessibleMessage, Message
 
 from webinar.application.config import ConfigFactory
 from webinar.application.exceptions import NotFoundHomeworks
@@ -39,6 +40,25 @@ from webinar.presentation.tgbot.states import AdminHomeWorksState
 
 
 route = Router()
+
+
+@route.errors(ExceptionTypeFilter(KeyError))
+async def error_key(error: ErrorEvent, state: FSMContext, keyboard, is_super_admin) -> None:
+    update = error.update
+    if update.message:
+        message = update.message
+    elif update.callback_query.message:
+        message = update.callback_query.message
+        if isinstance(message, InaccessibleMessage):
+            raise error.exception
+    else:
+        raise error.exception
+    await message.answer(
+        "Админка",
+        reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
+    )
+    await state.clear()
+    
 
 
 @route.callback_query(F.data == "homeworks")
@@ -95,15 +115,26 @@ async def pagination_handler(
         await event.answer("Домашних заданий нет", show_alert=True)
         return None
     
-    await message.edit_text(
-        "Список сданных работ",
-        reply_markup=keyboard.inline.pagination_homeworks(
-            model=homework_entity,
-            offset=0,
-            count_homeworks=count_homeworks,
-            count_homeworks_in_pagination=config.config.const.count_homeworks_in_pagination,
-        ),
-    )
+    try:
+        await message.edit_text(
+            "Список сданных работ",
+            reply_markup=keyboard.inline.pagination_homeworks(
+                model=homework_entity,
+                offset=0,
+                count_homeworks=count_homeworks,
+                count_homeworks_in_pagination=config.config.const.count_homeworks_in_pagination,
+            ),
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            "Список сданных работ",
+            reply_markup=keyboard.inline.pagination_homeworks(
+                model=homework_entity,
+                offset=0,
+                count_homeworks=count_homeworks,
+                count_homeworks_in_pagination=config.config.const.count_homeworks_in_pagination,
+            ),
+        )
     await state.update_data(offset=0)
     await state.set_state(AdminHomeWorksState.pagination)
 
