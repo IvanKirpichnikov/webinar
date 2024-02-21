@@ -13,14 +13,13 @@ async def setup_context(
     config: ConfigFactory = Context(),
 ) -> None:
     config_ = config.config
-    bot = Bot(config_.bot.token)
+    
     
     google_sheet = await google_sheets_adapter(
         config_.google_sheets.data, config_.google_sheets.url
     )
     await google_sheet.create_worksheet_and_set_names()
     
-    context.set_global("bot", bot)
     context.set_global("config", config)
     context.set_global("google_sheet", google_sheet)
 

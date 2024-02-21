@@ -1,3 +1,4 @@
+from aiogram import Bot
 from faststream import FastStream
 from faststream.nats import NatsBroker
 from psycopg import AsyncConnection
@@ -22,6 +23,8 @@ async def broker_message(
     broker.include_router(route)
     
     app = FastStream(broker)
+    bot = Bot(config.bot.token)
+    app.context.set_global('bot', bot)
     app.context.set_global("config", config_factory)
     app.context.set_global("pool", pool)
     app.on_startup(setup_context)
@@ -30,6 +33,6 @@ async def broker_message(
     try:
         await app.run()
     finally:
-        await app.context.bot.session.close()
+        await bot.session.close()
         
 
