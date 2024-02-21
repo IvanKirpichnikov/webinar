@@ -22,9 +22,14 @@ async def broker_message(
     broker.include_router(route)
     
     app = FastStream(broker)
-    app.on_startup(setup_context)
-    app.on_shutdown(close_connect)
     app.context.set_global("config", config_factory)
     app.context.set_global("pool", pool)
+    app.on_startup(setup_context)
+    app.on_shutdown(close_connect)
     
-    return await app.run()
+    try:
+        await app.run()
+    finally:
+        await app.context.bot.session.close()
+        
+
