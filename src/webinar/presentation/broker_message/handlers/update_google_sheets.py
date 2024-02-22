@@ -1,7 +1,7 @@
 from faststream import Context
 from faststream.nats import NatsRouter
 from psycopg import AsyncConnection
-from psycopg.rows import DictRow
+from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.schemas.dto.common import DirectionTrainingDTO
@@ -27,6 +27,7 @@ async def update_data_handler(
         (DirectionTrainingType.COPYRIGHTING, WorkSheetId.COPYRIGHTING)
     ]
     async with pool.connection() as connect:
+        connect.row_factory = dict_row
         for training_type, work_sheet_id in training_types:
             dto = DirectionTrainingDTO(training_type)
             data = await UserRepositoryImpl(connect).read_user_and_he_homeworks(dto)

@@ -206,7 +206,6 @@ class AdminDAOImpl(AbstractAdminDAO, BaseDAO):
         async with self.connect.cursor() as cursor:
             await cursor.execute(sql, asdict(model))
             raw_data = await cursor.fetchone()
-        print(raw_data, model)
         if not raw_data:
             raise NotFoundAdmin
         return TelegramChatIdDTO(

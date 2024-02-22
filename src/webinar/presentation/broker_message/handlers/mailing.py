@@ -20,7 +20,7 @@ from faststream.nats.annotations import (
     NatsMessage,
 )
 from psycopg import AsyncConnection
-from psycopg.rows import DictRow
+from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.exceptions import NotFoundUsers
@@ -51,6 +51,7 @@ async def start_mailing(
         ]
     try:
         async with pool.connection() as connect:
+            connect.row_factory = dict_row
             user_entities = await UserRepositoryImpl(connect).read_all_by_direction_training(
                 DirectionsTrainingDTO(direction_trainings)
             )
