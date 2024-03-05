@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InaccessibleMessage
 
-from webinar.infrastructure.database.repository.stats import (
+from webinar.infrastructure.postgres.repository.stats import (
     StatsRepositoryImpl,
 )
 from webinar.presentation.tgbot.keyboard import KeyboardFactory

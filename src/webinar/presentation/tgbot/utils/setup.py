@@ -5,7 +5,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.application.config import ConfigFactory
+from webinar.config import ConfigFactory
 from webinar.infrastructure.adapters.cache import CacheStore
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.middlewaring.is_super_admin import IsSuperAdminMiddlewareImpl

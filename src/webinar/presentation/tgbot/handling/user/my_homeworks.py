@@ -1,20 +1,21 @@
 from aiogram import (
     F,
-    Router
+    Router,
 )
 from aiogram.enums import ParseMode
 from aiogram.filters import or_f
 from aiogram.types import (
     CallbackQuery,
-    InaccessibleMessage
+    InaccessibleMessage,
 )
 
-from webinar.application.exceptions import NotFoundHomeworks
-from webinar.application.schemas.dto.common import TelegramUserIdDTO
-from webinar.application.schemas.dto.homework import UpdatingTypeByIdDTO
-from webinar.application.schemas.enums.homework import HomeWorkStatusType
-from webinar.application.schemas.types import TelegramUserId
-from webinar.infrastructure.database.repository.homework import HomeWorkRepositoryImpl
+from webinar.application.dto.common import TgUserIdDTO
+from webinar.application.use_case.homeworks.read_user_homeworks import ReadUserHomeworkError
+from webinar.application.use_case.homeworks.update_homework_status import UpdateHomeWorkStatusDTO
+from webinar.domain.enums.homework import HomeWorkStatusType
+from webinar.domain.types import TgUserId
+from webinar.presentation.annotaded import ReadUserHomeWorksDepends, UpdateHomeWorkStatusDepends
+from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import ReCheckingHomework
 
@@ -29,21 +30,22 @@ route.callback_query(
 
 
 @route.callback_query(F.data == "my_homeworks")
+@inject(InjectStrategy.HANDLER)
 async def my_homeworks_handler(
     event: CallbackQuery,
     keyboard: KeyboardFactory,
-    homework_repository: HomeWorkRepositoryImpl,
+    read_user_homeworks: ReadUserHomeWorksDepends,
 ) -> None:
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
-    dto = TelegramUserIdDTO(TelegramUserId(event.from_user.id))
     try:
-        homeworks = await homework_repository.read_all_by_telegram_user_id(dto)
-    except NotFoundHomeworks:
+        homeworks = await read_user_homeworks(
+            TgUserIdDTO(TgUserId(event.from_user.id))
+        )
+    except ReadUserHomeworkError:
         await event.answer("У вас нет домашних заданий", show_alert=True)
         return None
     
@@ -63,19 +65,21 @@ async def my_homeworks_handler(
 
 
 @route.callback_query(ReCheckingHomework.filter(), flags=dict(repo_uow=True))
+@inject(InjectStrategy.HANDLER)
 async def update_homework_handler(
     event: CallbackQuery,
     callback_data: ReCheckingHomework,
-    homework_repository: HomeWorkRepositoryImpl,
     keyboard: KeyboardFactory,
+    update_homework_status: UpdateHomeWorkStatusDepends,
+    read_user_homeworks: ReadUserHomeWorksDepends,
 ) -> None:
     if event.message is None:
         return
     
-    await homework_repository.update_type(
-        UpdatingTypeByIdDTO(
+    await update_homework_status(
+        UpdateHomeWorkStatusDTO(
             db_id=callback_data.db_id,
             status_type=HomeWorkStatusType.UNDER_INSPECTION,
         )
     )
-    await my_homeworks_handler(event, keyboard, homework_repository)
+    await my_homeworks_handler(event, keyboard, read_user_homeworks)

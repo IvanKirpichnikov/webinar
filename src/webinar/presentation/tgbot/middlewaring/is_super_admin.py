@@ -11,7 +11,7 @@ from aiogram.types import (
     User
 )
 
-from webinar.application.config import ConfigFactory
+from webinar.config import ConfigFactory
 
 
 Handler = Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]]

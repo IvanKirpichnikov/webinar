@@ -23,20 +23,20 @@ from webinar.application.exceptions import (
     AdminCreated,
     NotFoundAdmin
 )
-from webinar.application.schemas.dto.admin import CreateAdminDTO
-from webinar.application.schemas.dto.common import (
+from webinar.application.dto.admin import CreateAdminDTO
+from webinar.application.dto import (
     DirectionsTrainingDTO,
     ResultExistsDTO,
 )
-from webinar.application.schemas.enums.direction_type import (
+from webinar.domain.enums import (
     DirectionTrainingType,
 )
-from webinar.application.schemas.types import TelegramUserId
+from webinar.domain.types import TgUserId
 from webinar.infrastructure.adapters.cache import CacheStore
-from webinar.infrastructure.database.repository.admin import (
+from webinar.infrastructure.postgres.repository.admin import (
     AdminRepositoryImpl,
 )
-from webinar.infrastructure.word_range.main import parse_letters_range
+from webinar.infrastructure.word_range import parse_letters_range
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import Direction
 from webinar.presentation.tgbot.states import AddAdminState
@@ -117,7 +117,7 @@ async def ask_webinar_type(
     is_super_admin: bool,
 ) -> None:
     try:
-        user_id = TelegramUserId(user_id)
+        user_id = TgUserId(user_id)
     except ValueError:
         msg = await event.answer(
             "Вы отправили не правильный айди. Повторите попытку.",
@@ -205,7 +205,7 @@ async def get_word_range(
     if msg_id := state_data.get("msg_id"):
         with suppress(TelegramBadRequest):
             await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
-    user_id = TelegramUserId(state_data["user_id"])
+    user_id = TgUserId(state_data["user_id"])
     if event.text == "Числовой диапазон":
         model = CreateAdminDTO(
             telegram_user_id=user_id,
@@ -248,7 +248,7 @@ async def get_word_range(
         "Вы добавили администратора",
         reply_markup=keyboard.inline.admin_main_menu(is_super_admin),
     )
-    cache.exists_admin[TelegramUserId(event.from_user.id)] = ResultExistsDTO(
+    cache.exists_admin[TgUserId(event.from_user.id)] = ResultExistsDTO(
         True
     )
     with suppress(TelegramBadRequest):

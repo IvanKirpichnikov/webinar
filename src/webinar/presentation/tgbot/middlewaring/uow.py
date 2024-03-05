@@ -10,12 +10,12 @@ from psycopg import AsyncConnection
 from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.infrastructure.database.repository.admin import AdminRepositoryImpl
-from webinar.infrastructure.database.repository.homework import HomeWorkRepositoryImpl
-from webinar.infrastructure.database.repository.stats import StatsRepositoryImpl
-from webinar.infrastructure.database.repository.uow import UnitOfWorkRepositoryImpl
-from webinar.infrastructure.database.repository.user import UserRepositoryImpl
-from webinar.infrastructure.database.repository.webinar import WebinarRepositoryImpl
+from webinar.infrastructure.postgres.repository.admin import AdminRepositoryImpl
+from webinar.infrastructure.postgres.repository.homework import HomeWorkRepositoryImpl
+from webinar.infrastructure.postgres.repository.stats import StatsRepositoryImpl
+from webinar.infrastructure.postgres.uow import PostgresUoWImpl
+from webinar.infrastructure.postgres.repository.user import UserRepositoryImpl
+from webinar.infrastructure.postgres.repository.webinar import WebinarRepositoryImpl
 
 
 def setup_repository(
@@ -43,14 +43,8 @@ class RepositoryMiddlewareImpl(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        async with data['psql_pool'].connection() as conn:
-            conn.row_factory = dict_row
-            uow = UnitOfWorkRepositoryImpl(conn)
-            setup_repository(data, conn)
-            try:
+        async with self.pool.connection() as conn:
+            async with PostgresUoWImpl(conn).transaction():
+                conn.row_factory = dict_row
+                setup_repository(data, conn)
                 await handler(event, data)
-            except Exception as e:
-                await uow.rollback()
-                raise e
-            else:
-                await uow.commit()

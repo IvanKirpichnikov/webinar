@@ -1,4 +1,5 @@
 from aiogram import F, html, Router
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InaccessibleMessage
 
@@ -47,11 +48,11 @@ async def technical_support_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
-        "Какая проблема?", reply_markup=keyboard.inline.technical_support()
+        "Какая проблема?",
+        reply_markup=keyboard.inline.technical_support()
     )
     await state.clear()
 
@@ -62,15 +63,12 @@ async def dont_work_invite_handler(
 ) -> None:
     if event.message is None:
         return
-    message = event.message
-    if isinstance(message, InaccessibleMessage):
+    if isinstance(event.message, InaccessibleMessage):
         return
     
-    await message.edit_text(
-        (
-            "Посмотрите внимательно инструкцию. Попробуйте скопировать инвайт код из инструкции и вставить\n"
-            + INSTRUCTION
-        ),
+    await event.message.edit_text(
+        "Посмотрите внимательно инструкцию. Попробуйте скопировать инвайт код из инструкции и вставить\n"
+        + INSTRUCTION,
         reply_markup=keyboard.inline.back("technical_support"),
     )
 
@@ -82,7 +80,6 @@ async def i_can_log_into_platform_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -97,7 +94,6 @@ async def doesnt_load_lessons_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -114,7 +110,6 @@ async def can_reset_password_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -124,5 +119,5 @@ async def can_reset_password_handler(
         "2. Нажмите кнопку <code>«Сформулируйте ваш вопрос».</code>\n"
         "3. Напишите и отправьте <code>«Не могу восстановить пароль».</code>\n",
         reply_markup=keyboard.inline.back("technical_support"),
-        parse_mode='html'
+        parse_mode=ParseMode.HTML
     )

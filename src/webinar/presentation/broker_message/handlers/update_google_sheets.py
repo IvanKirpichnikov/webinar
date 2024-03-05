@@ -4,13 +4,13 @@ from psycopg import AsyncConnection
 from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.application.schemas.dto.common import DirectionTrainingDTO
-from webinar.application.schemas.enums.direction_type import (
+from webinar.application.dto import DirectionTrainingDTO
+from webinar.domain.enums import (
     DirectionTrainingType,
 )
-from webinar.application.schemas.enums.google_sheets import WorkSheetId
-from webinar.infrastructure.adapters.google_sheet import GoogleSheetsAdapter
-from webinar.infrastructure.database.repository.user import UserRepositoryImpl
+from webinar.infrastructure.google_sheets.enums import WorkSheetId
+from webinar.infrastructure.google_sheets.gateway import GoogleSheetsAdapter
+from webinar.infrastructure.postgres.repository.user import UserRepositoryImpl
 
 
 route = NatsRouter()

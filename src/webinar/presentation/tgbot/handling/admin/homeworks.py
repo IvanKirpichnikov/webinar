@@ -6,29 +6,29 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ErrorEvent, InaccessibleMessage, Message
 
-from webinar.application.config import ConfigFactory
+from webinar.config import ConfigFactory
 from webinar.application.exceptions import NotFoundHomeworks
-from webinar.application.schemas.dto.common import TelegramUserIdDTO
-from webinar.application.schemas.dto.homework import (
+from webinar.application.dto import TgUserIdDTO
+from webinar.application.dto.homework import (
     HomeWorkIdDTO,
     HomeWorkPaginationDTO,
     UpdatingEvaluationByIdDTO,
     UpdatingTypeAndCommentByIdDTO,
     UpdatingTypeByIdDTO,
 )
-from webinar.application.schemas.entities.homework import HOMEWORKS_TEXT_FROM_SPREADSHEETS
-from webinar.application.schemas.enums.direction_type import (
+from webinar.domain.models.homework import HOMEWORKS_TEXT_FROM_SPREADSHEETS
+from webinar.domain.enums import (
     DirectionTrainingType,
 )
-from webinar.application.schemas.enums.homework import (
+from webinar.domain.enums import (
     EvaluationType,
     HomeWorkStatusType,
 )
-from webinar.application.schemas.types import TelegramUserId
-from webinar.infrastructure.database.repository.admin import (
+from webinar.domain.types import TgUserId
+from webinar.infrastructure.postgres.repository.admin import (
     AdminRepositoryImpl,
 )
-from webinar.infrastructure.database.repository.homework import (
+from webinar.infrastructure.postgres.repository.homework import (
     HomeWorkRepositoryImpl,
 )
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
@@ -77,7 +77,7 @@ async def pagination_handler(
     if isinstance(message, InaccessibleMessage):
         return
     
-    telegram_user_id = TelegramUserId(event.from_user.id)
+    telegram_user_id = TgUserId(event.from_user.id)
     count_homeworks = (
         10**20 if is_super_admin else config.config.const.count_homeworks
     )
@@ -92,7 +92,7 @@ async def pagination_handler(
         letters_range, numbers_range = None, True
     else:
         admin_entity = await admin_repository.read_data_by_telegram_user_id(
-            TelegramUserIdDTO(telegram_user_id)
+            TgUserIdDTO(telegram_user_id)
         )
         direction_training = [admin_entity.direction_training]
         letters_range = admin_entity.letters_range
@@ -160,7 +160,7 @@ async def pagination_h(
     old_offset = state_data.get("offset", 1)
     offset_table = dict(back=old_offset - 1, next=old_offset + 1)
     new_offset = offset_table[callback_data.action]
-    telegram_user_id = TelegramUserId(event.from_user.id)
+    telegram_user_id = TgUserId(event.from_user.id)
     count_homeworks = (
         config.config.const.count_homeworks if not is_super_admin else 10**20
     )
@@ -175,7 +175,7 @@ async def pagination_h(
         letters_range, numbers_range = None, True
     else:
         admin_entity = await admin_repository.read_data_by_telegram_user_id(
-            TelegramUserIdDTO(telegram_user_id)
+            TgUserIdDTO(telegram_user_id)
         )
         direction_training = [admin_entity.direction_training]
         letters_range = admin_entity.letters_range

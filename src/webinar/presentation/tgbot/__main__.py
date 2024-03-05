@@ -12,7 +12,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.application.config import ConfigFactory
+from webinar.config import ConfigFactory
 from webinar.infrastructure.adapters.cache import CacheStore
 from webinar.presentation.tgbot.handling.main import route
 from webinar.presentation.tgbot.utils.create import create_other_database

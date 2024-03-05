@@ -8,11 +8,9 @@ version = "1.0.0"
 description = "Webinar Applcation"
 requires-python = "~=3.10.11"
 dependencies = [
-    'types-cachetools==5.3.0.7',
     'psycopg[binary]==3.1.16',
-    'psycopg_pool==3.2.1',
     'gspread-asyncio==1.9.0',
-    'types-toml==0.10.8.7',
+    'psycopg_pool==3.2.1',
     'faststream==0.3.11',
     'cachetools==5.3.2',
     'adaptix==3.0.0b1',
@@ -20,14 +18,19 @@ dependencies = [
     'aiogram==3.3.0',
     'nats-py==2.6.0',
     'toml==0.10.2',
+    'lz4==4.3.2',
+]
+[project.optional-dependencies]
+dev = [
+    'types-cachetools==5.3.0.7',
+    'types-toml==0.10.8.7',
     'mypy==1.8.0',
     'ruff==0.1.9',
-    'lz4==4.3.2',
 ]
 
 
 [project.scripts]
-webinar-bot = "webinar.presentation.cli.__main__:main"
+webinar-bot = "webinar.main.cli.__main__:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

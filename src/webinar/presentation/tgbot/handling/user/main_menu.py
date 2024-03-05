@@ -18,7 +18,7 @@ route.message.filter(CommandStart())
 route.callback_query.filter(F.data == "main_menu")
 
 
-@route.message(CommandStart())
+@route.message()
 async def main_menu_message_handler(
     event: Message, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
@@ -29,14 +29,13 @@ async def main_menu_message_handler(
     await state.clear()
 
 
-@route.callback_query(F.data == "main_menu")
+@route.callback_query()
 async def main_menu_callback_handler(
     event: CallbackQuery, state: FSMContext, keyboard: KeyboardFactory
 ) -> None:
     if event.message is None:
         return None
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return None
     
     await event.message.edit_text(

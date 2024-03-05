@@ -4,8 +4,8 @@ from faststream import (
     ContextRepo,
 )
 
-from webinar.application.config import ConfigFactory
-from webinar.infrastructure.adapters.google_sheet import google_sheets_adapter
+from webinar.config import ConfigFactory
+from webinar.infrastructure.google_sheets.gateway import google_sheets_adapter
 
 
 async def setup_context(

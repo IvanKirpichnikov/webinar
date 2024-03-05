@@ -24,9 +24,9 @@ from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.exceptions import NotFoundUsers
-from webinar.application.schemas.dto.common import DirectionsTrainingDTO
-from webinar.application.schemas.enums.direction_type import DirectionTrainingType
-from webinar.infrastructure.database.repository.user import UserRepositoryImpl
+from webinar.application.dto import DirectionsTrainingDTO
+from webinar.domain.enums import DirectionTrainingType
+from webinar.infrastructure.postgres.repository.user import UserRepositoryImpl
 from webinar.presentation.broker_message.decoder import decoder
 
 

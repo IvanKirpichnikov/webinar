@@ -4,19 +4,19 @@ from typing import cast
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from webinar.application.schemas.dto.button import BackButtonDataDTO
-from webinar.application.schemas.entities.homework import (
-    HomeWorkEntities,
+from webinar.application.dto import BackButtonDataDTO
+from webinar.domain.models.homework import (
+    HomeWorks,
     HOMEWORKS_TEXT,
-    UserHomeWorkEntities
+    UserHomeWorks
 )
-from webinar.application.schemas.entities.webinar import WebinarEntities
-from webinar.application.schemas.enums.direction_type import DirectionTrainingType
-from webinar.application.schemas.enums.homework import HomeWorkStatusType
-from webinar.application.schemas.types import (
+from webinar.domain.models import Webinars
+from webinar.domain.enums import DirectionTrainingType
+from webinar.domain.enums import HomeWorkStatusType
+from webinar.domain.types import (
     HomeWorkNumber,
-    TelegramChatId,
-    TelegramUserId
+    TgChatId,
+    TgUserId
 )
 from webinar.presentation.tgbot.keyboard.callback_data import (
     Direction,
@@ -115,10 +115,11 @@ class InlineKeyboardFactory:
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
     def pagination_webinars(
-        self, model: WebinarEntities, count_webinars_button: int, offset: int
+        self, model: Webinars,
+        count_webinars_button: int,
+        offset: int
     ) -> InlineKeyboardMarkup:
         builder = self.builder
-        
         for webinar in model.webinars:
             builder.button(text=webinar.name, url=webinar.url)
         if offset > 0:
@@ -144,7 +145,7 @@ class InlineKeyboardFactory:
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
     def under_revision_homeworks(
-        self, model: HomeWorkEntities
+        self, model: HomeWorks
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         for homework in model.homeworks:
@@ -181,7 +182,7 @@ class InlineKeyboardFactory:
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
     def select_direction_training_for(
-        self, user_id: TelegramUserId, url: bool = False
+        self, user_id: TgUserId, url: bool = False
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         buttons_data = [
@@ -208,7 +209,7 @@ class InlineKeyboardFactory:
     
     def pagination_homeworks(
         self,
-        model: UserHomeWorkEntities,
+        model: UserHomeWorks,
         offset: int,
         count_homeworks: int,
         count_homeworks_in_pagination: int,
@@ -235,7 +236,7 @@ class InlineKeyboardFactory:
         )
     
     def check_homework(
-        self, telegram_user_id: TelegramUserId, evaluation: bool = False, url: bool = False
+        self, telegram_user_id: TgUserId, evaluation: bool = False, url: bool = False
     ) -> InlineKeyboardMarkup:
         builder = self.builder
         if evaluation:
@@ -258,9 +259,8 @@ class InlineKeyboardFactory:
         
         return cast(InlineKeyboardMarkup, builder.adjust(1).as_markup())
     
-    @lru_cache()
     def send_answer_question(
-        self, chat_id: TelegramChatId, number_question: int,
+        self, chat_id: TgChatId, number_question: int,
         user_id: int, url: bool = False
     ) -> InlineKeyboardMarkup:
         builder = self.builder

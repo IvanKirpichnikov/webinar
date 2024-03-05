@@ -5,12 +5,10 @@ from aiogram.filters import and_f, or_f, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InaccessibleMessage
 
-from webinar.application.config import ConfigFactory
-from webinar.application.exceptions import NotFoundWebinars
-from webinar.application.schemas.dto.webinar import PaginationWebinarDTO
-from webinar.infrastructure.database.repository.webinar import (
-    WebinarRepositoryImpl,
-)
+from webinar.application.use_case.webinars.get_pagination import GetPaginationWebinarsData, NotFoundWebinars
+from webinar.config import ConfigFactory
+from webinar.presentation.annotaded import GetPaginationWebinarsDepends
+from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import Pagination
 from webinar.presentation.tgbot.states import WebinarPaginationState
@@ -28,29 +26,29 @@ route.callback_query.filter(
 
 
 @route.callback_query(F.data == "webinar_recordings")
+@inject(InjectStrategy.HANDLER)
 async def webinar_recordings_handler(
     event: CallbackQuery,
     state: FSMContext,
     config: ConfigFactory,
     keyboard: KeyboardFactory,
-    webinar_repository: WebinarRepositoryImpl,
+    get_pagination_webinars: GetPaginationWebinarsDepends,
 ) -> None:
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
-
+    
     count_webinars_button = config.config.const.count_webinars_button
-    pagination_dto = PaginationWebinarDTO(
+    pagination_dto = GetPaginationWebinarsData(
         limit=count_webinars_button, offset=0
     )
     try:
-        webinars = await webinar_repository.pagination(pagination_dto)
+        webinars = await get_pagination_webinars(pagination_dto)
     except NotFoundWebinars:
-        await event.answer("Вебинаров нет.", show_alert=True)
+        await event.answer("Вебинаров нет", show_alert=True)
         return None
-
+    
     await event.message.edit_text(
         "Вебинары",
         reply_markup=keyboard.inline.pagination_webinars(
@@ -59,42 +57,46 @@ async def webinar_recordings_handler(
     )
     await state.set_data({"offset": 0})
     await state.set_state(WebinarPaginationState.pagination)
-    return None
 
 
 @route.callback_query(Pagination.filter(), WebinarPaginationState.pagination)
+@inject(InjectStrategy.HANDLER)
 async def webinar_pagination_handler(
     event: CallbackQuery,
     state: FSMContext,
     callback_data: Pagination,
-    webinar_repository: WebinarRepositoryImpl,
+    get_pagination_webinars: GetPaginationWebinarsDepends,
     keyboard: KeyboardFactory,
     config: ConfigFactory,
 ) -> None:
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
-
+    
     state_data = await state.get_data()
     old_offset = state_data["offset"]
     count_webinars_button = config.config.const.count_webinars_button
     action = callback_data.action
     offset_table = {"back": old_offset - 1, "next": old_offset + 1}
     new_offset = offset_table[action]
-    pagination_dto = PaginationWebinarDTO(
-        limit=count_webinars_button, offset=new_offset * count_webinars_button
+    pagination_dto = GetPaginationWebinarsData(
+        limit=count_webinars_button,
+        offset=new_offset * count_webinars_button
     )
     try:
-        webinars = await webinar_repository.pagination(pagination_dto)
+        webinars = await get_pagination_webinars(pagination_dto)
     except NotFoundWebinars:
-        if new_offset == 0:
-            await event.answer("Вебинаров нет.", show_alert=True)
+        if new_offset != 0:
+            await webinar_recordings_handler(
+                event,
+                state,
+                config,
+                keyboard,
+                get_pagination_webinars,
+            )
             return None
-        await webinar_recordings_handler(
-            event, state, config, keyboard, webinar_repository
-        )
+        await event.answer("Вебинаров нет.", show_alert=True)
         return None
     await event.message.edit_text(
         "Вебинары",
@@ -103,4 +105,3 @@ async def webinar_pagination_handler(
         ),
     )
     await state.update_data(offset=new_offset)
-    return None

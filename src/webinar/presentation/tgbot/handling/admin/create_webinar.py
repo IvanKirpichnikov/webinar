@@ -12,8 +12,8 @@ from aiogram.types import (
 )
 
 from webinar.application.exceptions import DuplicateWebinar
-from webinar.application.schemas.dto.webinar import CreateWebinarDTO
-from webinar.infrastructure.database.repository.webinar import (
+from webinar.application.dto.webinar import CreateWebinarDTO
+from webinar.infrastructure.postgres.repository.webinar import (
     WebinarRepositoryImpl,
 )
 from webinar.presentation.tgbot.keyboard import KeyboardFactory

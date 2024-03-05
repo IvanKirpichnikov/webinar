@@ -2,13 +2,13 @@ from typing import MutableMapping
 
 from cachetools import TTLCache
 
-from webinar.application.schemas.dto.common import ResultExistsDTO
-from webinar.application.schemas.types import TelegramUserId
+from webinar.application.dto import ResultExistsDTO
+from webinar.domain.types import TgUserId
 
 
 class CacheStore:
-    exists_user: MutableMapping[TelegramUserId, ResultExistsDTO]
-    exists_admin: MutableMapping[TelegramUserId, ResultExistsDTO]
+    exists_user: MutableMapping[TgUserId, ResultExistsDTO]
+    exists_admin: MutableMapping[TgUserId, ResultExistsDTO]
 
     __slots__ = ("exists_user", "exists_admin")
 

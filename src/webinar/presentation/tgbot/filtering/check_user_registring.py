@@ -4,10 +4,10 @@ from aiogram.types import (
     User
 )
 
-from webinar.application.schemas.dto.common import TelegramUserIdDTO
-from webinar.application.schemas.types import TelegramUserId
+from webinar.application.dto import TgUserIdDTO
+from webinar.domain.types import TgUserId
 from webinar.infrastructure.adapters.cache import CacheStore
-from webinar.infrastructure.database.repository.user import UserRepositoryImpl
+from webinar.infrastructure.postgres.repository.user import UserRepositoryImpl
 
 
 class CheckUserRegisteringFilter(BaseFilter):
@@ -21,11 +21,11 @@ class CheckUserRegisteringFilter(BaseFilter):
         if event_from_user is None:
             return False
         
-        user_id = TelegramUserId(event_from_user.id)
+        user_id = TgUserId(event_from_user.id)
         if user_id in cache.exists_user:
             return cache.exists_user[user_id].result
         
-        dto = TelegramUserIdDTO(user_id)
+        dto = TgUserIdDTO(user_id)
         data = await user_repository.exists(dto)
         cache.exists_user[user_id] = data
         return data.result

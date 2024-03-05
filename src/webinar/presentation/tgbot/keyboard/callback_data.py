@@ -5,10 +5,10 @@ from typing import (
 
 from aiogram.filters.callback_data import CallbackData
 
-from webinar.application.schemas.enums.direction_type import DirectionTrainingType
-from webinar.application.schemas.types import (
+from webinar.domain.enums import DirectionTrainingType
+from webinar.domain.types import (
     DataBaseId,
-    TelegramChatId
+    TgChatId
 )
 
 
@@ -21,7 +21,7 @@ class Direction(CallbackData, prefix="ask_direction"):
 
 class SendAnswerQuestion(CallbackData, prefix="send_answer_question"):
     number_question: int
-    chat_id: TelegramChatId
+    chat_id: TgChatId
 
 
 class ReCheckingHomework(CallbackData, prefix="re_check"):

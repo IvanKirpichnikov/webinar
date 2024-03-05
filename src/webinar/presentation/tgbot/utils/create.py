@@ -2,16 +2,16 @@ from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.infrastructure.database.dao.admin import AdminOtherCreateImpl
-from webinar.infrastructure.database.dao.homework import HomeWorkOtherCreateImpl
-from webinar.infrastructure.database.dao.user import UserOtherCreateImpl
-from webinar.infrastructure.database.dao.webinar import WebinarOtherCreateImpl
-from webinar.infrastructure.database.repository.uow import UnitOfWorkRepositoryImpl
+from webinar.infrastructure.postgres.dao.admin import AdminOtherCreateImpl
+from webinar.infrastructure.postgres.dao.homework import HomeWorkOtherCreateImpl
+from webinar.infrastructure.postgres.dao.user import UserOtherCreateImpl
+from webinar.infrastructure.postgres.dao.webinar import WebinarOtherCreateImpl
+from webinar.infrastructure.postgres.uow import PostgresUoWImpl
 
 
 async def create_other_database(pool: AsyncConnectionPool[AsyncConnection[DictRow]]) -> None:
     async with pool.connection() as connect:
-        uow = UnitOfWorkRepositoryImpl(connect)
+        uow = PostgresUoWImpl(connect)
         other_create = [
             UserOtherCreateImpl(connect),
             WebinarOtherCreateImpl(connect),

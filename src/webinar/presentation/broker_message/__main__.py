@@ -5,7 +5,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.application.config import ConfigFactory
+from webinar.config import ConfigFactory
 from webinar.presentation.broker_message.di import (
     close_connect,
     setup_context
