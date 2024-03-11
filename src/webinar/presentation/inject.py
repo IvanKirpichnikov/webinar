@@ -1,6 +1,6 @@
 from enum import auto, IntEnum
 from inspect import Parameter
-from typing import Any, Container, Final
+from typing import Callable, Container, Final
 
 from dishka.integrations.base import wrap_injection
 
@@ -20,8 +20,8 @@ CONTAINER_GETTERS: Final = {
 }
 
 
-def inject(strategy: InjectStrategy) -> Any:
-    def wrapper(func: Any) -> Any:
+def inject(strategy: InjectStrategy) -> Callable:
+    def wrapper(func: Callable) -> Callable:
         additional_params = []
         
         if strategy == InjectStrategy.HANDLER:

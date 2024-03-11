@@ -9,8 +9,7 @@ from webinar.application.dto.homework import (
     HomeWorkIdDTO,
     HomeWorkPaginationDTO,
     TgUserIdAndStatusTypeDTO,
-    UpdatingEvaluationByIdDTO,
-    UpdatingTypeAndCommentByIdDTO,
+    UpdateHomeworkEvolutionAndStatusDTO, UpdatingTypeAndCommentByIdDTO,
 )
 from webinar.application.interfaces.gateways.homework import HomeWorkGateway
 from webinar.application.use_case.homeworks.add_user_homework import AddUserHomeWorkDTO
@@ -202,8 +201,8 @@ class PostgresHomeWorkGateway(PostgresGateway, HomeWorkGateway):
         async with self.connect.cursor() as cursor:
             await cursor.execute(sql, asdict(model))
     
-    async def update_evaluation(
-        self, model: UpdatingEvaluationByIdDTO
+    async def update_evolution_and_status(
+        self, model: UpdateHomeworkEvolutionAndStatusDTO
     ) -> None:
         sql = """
            UPDATE
@@ -327,7 +326,7 @@ class PostgresHomeWorkGateway(PostgresGateway, HomeWorkGateway):
             return None
         return self.retort.load(dict(homeworks=raw_data), UserHomeWorks)
     
-    async def read_homework_by_db_id_and_user_info(
+    async def read_homework_and_user_info_by_db_id(
         self, model: HomeWorkIdDTO
     ) -> HomeWorkAndUserInfoEntity:
         sql = """

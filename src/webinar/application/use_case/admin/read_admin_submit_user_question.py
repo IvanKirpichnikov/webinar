@@ -2,10 +2,10 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Protocol
 
+from webinar.application.dto.admin import ReadAdminByLettersRangeData
 from webinar.application.dto.common import DirectionsTrainingDTO, TgChatIdDTO
 from webinar.application.interactions.admin.read_admin_by_letters_range import (
     ReadAdminByLettersRange,
-    ReadAdminByLettersRangeData,
 )
 from webinar.application.interactions.admin.read_random_admin import ReadRandomAdmin
 from webinar.application.use_case.base import UseCase

@@ -7,7 +7,6 @@ from psycopg.errors import UniqueViolation
 from webinar.application.dto.webinar import (
     CreateWebinarDTO,
 )
-from webinar.application.exceptions import DuplicateWebinar
 from webinar.application.interfaces.gateways.webinar import WebinarGateway
 from webinar.application.use_case.webinars.get_pagination import GetPaginationWebinarsData
 from webinar.domain.models.webinar import Webinars
@@ -36,7 +35,7 @@ class WebinarOtherCreateImpl(BaseOtherCreate):
 class PostgresWebinarGateway(PostgresGateway, WebinarGateway):
     retort = Retort()
     
-    async def create(self, model: CreateWebinarDTO) -> None:
+    async def create(self, model: CreateWebinarDTO) -> bool:
         sql = """
             INSERT INTO webinars(url, name)
             VALUES (%(url)s, %(name)s);
@@ -44,8 +43,9 @@ class PostgresWebinarGateway(PostgresGateway, WebinarGateway):
         async with self.connect.cursor() as cursor:
             try:
                 await cursor.execute(sql, asdict(model))
-            except UniqueViolation as exception:
-                raise DuplicateWebinar from exception
+            except UniqueViolation:
+                return False
+        return True
     
     async def pagination(self, model: GetPaginationWebinarsData) -> Webinars | None:
         sql = """

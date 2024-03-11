@@ -19,10 +19,7 @@ from webinar.application.dto.common import (
     TgChatIdDTO,
     TgUserIdDTO,
 )
-from webinar.application.exceptions import (
-    AdminCreated,
-    NotFoundAdmin,
-)
+from webinar.application.exceptions import NotFoundAdmin
 from webinar.application.interfaces.gateways.admin import AdminGateway
 from webinar.domain.models.admin import (Admin, AdminDataInfo, Admins)
 from webinar.domain.types import TgChatId
@@ -48,7 +45,7 @@ class AdminOtherCreateImpl(BaseOtherCreate):
 class PostgresAdminGateway(PostgresGateway, AdminGateway):
     retort = Retort(recipe=[as_is_loader(datetime)])
     
-    async def create(self, model: CreateAdminDTO) -> None:
+    async def create(self, model: CreateAdminDTO) -> bool:
         sql = """
             INSERT INTO admins(
                 db_user_id,
@@ -66,8 +63,10 @@ class PostgresAdminGateway(PostgresGateway, AdminGateway):
         async with self.connect.cursor() as cursor:
             try:
                 await cursor.execute(sql, asdict(model))
-            except UniqueViolation as error:
-                raise AdminCreated from error
+            except UniqueViolation:
+                return False
+            else:
+                return True
     
     async def exists(self, model: TgUserIdDTO) -> ResultExistsDTO:
         sql = """
@@ -116,7 +115,7 @@ class PostgresAdminGateway(PostgresGateway, AdminGateway):
     
     async def read_all_by_direction_training(
         self, model: DirectionsTrainingDTO
-    ) -> Admins:
+    ) -> Admins | None:
         sql = """
             SELECT a.direction_training,
                    a.letters_range,
@@ -137,9 +136,9 @@ class PostgresAdminGateway(PostgresGateway, AdminGateway):
         """
         async with self.connect.cursor() as cursor:
             await cursor.execute(sql, astuple(model))
-            raw_data = cast(list[Mapping[str, Any]], await cursor.fetchall())
+            raw_data = await cursor.fetchall()
         if raw_data is None:
-            raise NotFoundAdmin
+            return None
         return self.retort.load(dict(admins=raw_data), Admins)
     
     async def read_data_by_telegram_user_id(

@@ -1,18 +1,10 @@
 from abc import abstractmethod
-from dataclasses import dataclass
 from typing import Protocol
 
+from webinar.application.dto.admin import ReadAdminByLettersRangeData
 from webinar.application.dto.common import TgChatIdDTO
 from webinar.application.interactions.base import Interactor
 from webinar.application.interfaces.gateways.admin import AdminGateway
-from webinar.domain.enums.direction_type import DirectionTrainingType
-from webinar.domain.types import TgUserId
-
-
-@dataclass(frozen=True, slots=True)
-class ReadAdminByLettersRangeData:
-    telegram_user_id: TgUserId
-    direction_training: DirectionTrainingType
 
 
 class ReadAdminByLettersRange(

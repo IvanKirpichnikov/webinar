@@ -1,42 +1,26 @@
-from contextlib import suppress
-
-from aiogram import (
-    Bot,
-    F,
-    Router
-)
+from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import (
-    and_f,
-    MagicData,
-    or_f,
-    StateFilter
-)
+from aiogram.filters import and_f, MagicData, or_f, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    CallbackQuery,
-    InaccessibleMessage,
-    Message
-)
+from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 
+from webinar.application.dto.admin import CreateAdminDTO
+from webinar.application.dto.common import DirectionsTrainingDTO, ResultExistsDTO
 from webinar.application.exceptions import (
     AdminCreated,
-    NotFoundAdmin
 )
-from webinar.application.dto.admin import CreateAdminDTO
-from webinar.application.dto import (
-    DirectionsTrainingDTO,
-    ResultExistsDTO,
-)
-from webinar.domain.enums import (
-    DirectionTrainingType,
-)
+from webinar.application.interfaces.delete_message import DeleteMessageData
+from webinar.application.use_case.admin.read_all_by_direction_training import \
+    NotFoundAdminsToTrainingDirection
+from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.domain.types import TgUserId
 from webinar.infrastructure.adapters.cache import CacheStore
-from webinar.infrastructure.postgres.repository.admin import (
-    AdminRepositoryImpl,
-)
 from webinar.infrastructure.word_range import parse_letters_range
+from webinar.presentation.annotaded import (
+    CreateAdminDepends, ReadAllAdminByDirectionTrainingDepends,
+    TgDeleteMessageDepends,
+)
+from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import Direction
 from webinar.presentation.tgbot.states import AddAdminState
@@ -54,45 +38,49 @@ route.message.filter(MagicData(F.is_super_admin), StateFilter(AddAdminState))
 
 
 @route.callback_query(F.data == "add_admin")
+@inject(InjectStrategy.HANDLER)
 async def ask_user_id(
     event: CallbackQuery,
-    bot: Bot,
     state: FSMContext,
-    admin_repository: AdminRepositoryImpl,
     keyboard: KeyboardFactory,
+    tg_delete_message: TgDeleteMessageDepends,
+    read_admins_by_dt: ReadAllAdminByDirectionTrainingDepends,
 ) -> None:
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     state_data = await state.get_data()
-    if msg_id_ := state_data.get("msg_id"):
-        with suppress(TelegramBadRequest):
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id_
+    if message_id := state_data.get("msg_id"):
+        await tg_delete_message(
+            DeleteMessageData(
+                chat_id=event.message.chat.id,
+                message_id=message_id
             )
-    smm_dto = DirectionsTrainingDTO([DirectionTrainingType.SMM])
-    copyrighting_dto = DirectionsTrainingDTO(
-        [DirectionTrainingType.COPYRIGHTING]
-    )
-    
+        )
     try:
-        admin_entities = await admin_repository.read_all_by_direction_training(smm_dto)
-    except NotFoundAdmin:
+        admin_entities = await read_admins_by_dt(
+            DirectionsTrainingDTO([DirectionTrainingType.SMM])
+        )
+    except NotFoundAdminsToTrainingDirection:
         smm_text = ""
     else:
         smm_text = admin_entities.string()
     try:
-        admin_entities = await admin_repository.read_all_by_direction_training(copyrighting_dto)
-    except NotFoundAdmin:
+        admin_entities = await read_admins_by_dt(
+            DirectionsTrainingDTO(
+                [DirectionTrainingType.COPYRIGHTING]
+            )
+        )
+    except NotFoundAdminsToTrainingDirection:
         copyrighting_text = ""
     else:
         copyrighting_text = admin_entities.string()
     
     msg_data = dict(
-        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:\n{copyrighting_text}",
+        text=f"Пришли телеграм айди администратора\n\nCMM:\n{smm_text}\n\nКопирайтинг:\n"
+             f"{copyrighting_text}",
         reply_markup=keyboard.inline.back("admin_panel")
     )
     try:
@@ -108,13 +96,14 @@ async def ask_user_id(
 
 
 @route.message(F.text.as_("user_id"), AddAdminState.ask_user_id)
+@inject(InjectStrategy.HANDLER)
 async def ask_webinar_type(
     event: Message,
-    bot: Bot,
     state: FSMContext,
     keyboard: KeyboardFactory,
-    user_id: str,
     is_super_admin: bool,
+    tg_delete_message: TgDeleteMessageDepends,
+    user_id: str,
 ) -> None:
     try:
         user_id = TgUserId(user_id)
@@ -126,10 +115,18 @@ async def ask_webinar_type(
         await state.set_data({"msg_id": msg.message_id})
         return None
     
+    message_ids = [event.message_id]
     state_data = await state.get_data()
-    if msg_id_ := state_data.get("msg_id"):
-        with suppress(TelegramBadRequest):
-            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id_)
+    if message_id := state_data.get("msg_id"):
+        message_ids.append(message_id)
+    
+    await tg_delete_message(
+        DeleteMessageData(
+            chat_id=event.chat.id,
+            message_id=message_id
+        )
+    )
+    
     try:
         try:
             msg = await event.answer(
@@ -151,64 +148,77 @@ async def ask_webinar_type(
             reply_markup=keyboard.inline.admin_main_menu(is_super_admin),
         )
         await state.set_data({"msg_id": msg.message_id})
-        return
-    with suppress(TelegramBadRequest):
-        await event.delete()
+        return None
+    
     await state.set_data({"msg_id": msg.message_id, "user_id": user_id})
     await state.set_state(AddAdminState.ask_webinar_type)
 
 
 @route.callback_query(AddAdminState.ask_webinar_type, Direction.filter())
+@inject(InjectStrategy.HANDLER)
 async def ask_range_or_numb_handler(
     event: CallbackQuery,
-    bot: Bot,
     state: FSMContext,
     callback_data: Direction,
     keyboard: KeyboardFactory,
+    tg_delete_message: TgDeleteMessageDepends,
 ) -> None:
     if event.message is None:
         return
-    message = event.message
-    if isinstance(message, InaccessibleMessage):
+    if isinstance(event.message, InaccessibleMessage):
         return
     
     state_data = await state.get_data()
-    if msg_id := state_data.get("msg_id"):
-        with suppress(TelegramBadRequest):
-            await bot.delete_message(
-                chat_id=event.message.chat.id, message_id=msg_id
+    if message_id := state_data.get("msg_id"):
+        await tg_delete_message(
+            DeleteMessageData(
+                chat_id=event.message.chat.id,
+                message_id=message_id
             )
-    msg = await message.answer(
+        )
+    
+    msg = await event.message.answer(
         "Введи диапазон букв или выбери числовой диапазон. Диапазон букв А-В",
         reply_markup=keyboard.reply.save(),
     )
     await state.update_data(
-        msg_id=msg.message_id, direction_training=callback_data.type
+        msg_id=msg.message_id,
+        direction_training=callback_data.type
     )
     await state.set_state(AddAdminState.ask_range_or_numb)
 
 
 @route.message(AddAdminState.ask_range_or_numb, flags=dict(repo_uow=True))
+@inject(InjectStrategy.HANDLER)
 async def get_word_range(
     event: Message,
-    bot: Bot,
     state: FSMContext,
     keyboard: KeyboardFactory,
-    admin_repository: AdminRepositoryImpl,
     is_super_admin: bool,
     cache: CacheStore,
+    tg_delete_message: TgDeleteMessageDepends,
+    use_case: CreateAdminDepends
 ) -> None:
-    if event.from_user is None or event.text is None:
-        return
+    if event.from_user is None:
+        return None
+    if event.text is None:
+        return None
     
+    message_ids = [event.message_id]
     state_data = await state.get_data()
-    if msg_id := state_data.get("msg_id"):
-        with suppress(TelegramBadRequest):
-            await bot.delete_message(chat_id=event.chat.id, message_id=msg_id)
-    user_id = TgUserId(state_data["user_id"])
+    if message_id := state_data.get("msg_id"):
+        message_ids.append(message_id)
+    
+    await tg_delete_message(
+        DeleteMessageData(
+            chat_id=event.chat.id,
+            message_id=message_ids
+        )
+    )
+    tg_user_id = TgUserId(state_data["user_id"])
     if event.text == "Числовой диапазон":
         model = CreateAdminDTO(
-            telegram_user_id=user_id,
+            telegram_user_id=tg_user_id,
             direction_training=state_data["direction_training"],
             numbers_range=True,
         )
@@ -231,13 +241,13 @@ async def get_word_range(
             return None
         else:
             model = CreateAdminDTO(
-                telegram_user_id=user_id,
+                telegram_user_id=tg_user_id,
                 direction_training=state_data["direction_training"],
                 letters_range=letters_range,
             )
     
     try:
-        await admin_repository.create(model)
+        await use_case(model)
     except AdminCreated:
         await event.answer(
             text="Пользователь уже добавлен в качестве администратора",
@@ -251,6 +261,4 @@ async def get_word_range(
     cache.exists_admin[TgUserId(event.from_user.id)] = ResultExistsDTO(
         True
     )
-    with suppress(TelegramBadRequest):
-        await event.delete()
     await state.clear()

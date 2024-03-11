@@ -1,18 +1,19 @@
 from abc import abstractmethod
-from typing import Protocol, TYPE_CHECKING
+from typing import Protocol
 
-from webinar.application.dto.admin import CreateAdminDTO
-from webinar.application.dto.common import DirectionsTrainingDTO, ResultExistsDTO, TgChatIdDTO, TgUserIdDTO
+from webinar.application.dto.admin import CreateAdminDTO, ReadAdminByLettersRangeData
+from webinar.application.dto.common import (
+    DirectionsTrainingDTO,
+    ResultExistsDTO,
+    TgChatIdDTO,
+    TgUserIdDTO,
+)
 from webinar.domain.models.admin import (Admin, AdminDataInfo, Admins)
-
-
-if TYPE_CHECKING:
-    from webinar.application.interactions.admin.read_admin_by_letters_range import ReadAdminByLettersRangeData
 
 
 class AdminGateway(Protocol):
     @abstractmethod
-    async def create(self, model: CreateAdminDTO) -> None:
+    async def create(self, model: CreateAdminDTO) -> bool:
         raise NotImplementedError
     
     @abstractmethod
@@ -28,7 +29,7 @@ class AdminGateway(Protocol):
     @abstractmethod
     async def read_all_by_direction_training(
         self, model: DirectionsTrainingDTO
-    ) -> Admins:
+    ) -> Admins | None:
         raise NotImplementedError
     
     @abstractmethod
@@ -46,6 +47,6 @@ class AdminGateway(Protocol):
     @abstractmethod
     async def read_by_letters_range(
         self,
-        model: 'ReadAdminByLettersRangeData'
+        model: ReadAdminByLettersRangeData
     ) -> TgChatIdDTO | None:
         raise NotImplementedError

@@ -1,21 +1,20 @@
 from dataclasses import dataclass
 
-from webinar.application.dto.base import DataAccessObject
-from webinar.application.dto.common import TgUserIdDTO
 from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.domain.enums.homework import HomeWorkStatusType
-
-
-
+from webinar.domain.types import TgUserId
 
 
 @dataclass(frozen=True, slots=True)
-class TgUserIdAndStatusTypeDTO(TgUserIdDTO):
+class TgUserIdAndStatusTypeDTO:
+    telegram_user_id: TgUserId
     status_type: HomeWorkStatusType
 
 
-
-
+@dataclass(frozen=True, slots=True)
+class UpdateHomeworkTypeDTO:
+    db_id: int
+    
 
 @dataclass(frozen=True, slots=True)
 class UpdatingTypeAndCommentByIdDTO(UpdatingTypeByIdDTO):
@@ -23,17 +22,20 @@ class UpdatingTypeAndCommentByIdDTO(UpdatingTypeByIdDTO):
 
 
 @dataclass(frozen=True, slots=True)
-class UpdatingEvaluationByIdDTO(UpdatingTypeByIdDTO):
+class UpdateHomeworkEvolutionAndStatusDTO:
+    db_id: int
+    status_type: HomeWorkStatusType
     evaluation: str
 
 
 @dataclass(frozen=True, slots=True)
-class HomeWorkIdDTO(DataAccessObject):
+class HomeWorkIdDTO:
     db_id: int
 
 
 @dataclass(frozen=True, slots=True)
-class HomeWorkPaginationDTO(TgUserIdDTO):
+class HomeWorkPaginationDTO:
+    telegram_user_id: TgUserId
     direction_training: list[DirectionTrainingType]
     count_homeworks: int
     limit: int

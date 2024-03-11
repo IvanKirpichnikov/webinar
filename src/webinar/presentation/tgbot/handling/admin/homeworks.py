@@ -1,36 +1,34 @@
 from contextlib import suppress
 
 from aiogram import Bot, F, Router
-from aiogram.filters import ExceptionTypeFilter
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import ExceptionTypeFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ErrorEvent, InaccessibleMessage, Message
 
-from webinar.config import ConfigFactory
-from webinar.application.exceptions import NotFoundHomeworks
-from webinar.application.dto import TgUserIdDTO
+from webinar.application.dto.common import TgUserIdDTO
 from webinar.application.dto.homework import (
     HomeWorkIdDTO,
     HomeWorkPaginationDTO,
-    UpdatingEvaluationByIdDTO,
-    UpdatingTypeAndCommentByIdDTO,
-    UpdatingTypeByIdDTO,
+    UpdateHomeworkEvolutionAndStatusDTO, UpdatingTypeAndCommentByIdDTO,
 )
+from webinar.application.interfaces.delete_message import DeleteMessageData
+from webinar.application.use_case.homeworks.read_for_pagination import NoFoundHomeworksForPagination
+from webinar.config import ConfigFactory
+from webinar.domain.enums.direction_type import DirectionTrainingType
+from webinar.domain.enums.homework import EvaluationType, HomeWorkStatusType
 from webinar.domain.models.homework import HOMEWORKS_TEXT_FROM_SPREADSHEETS
-from webinar.domain.enums import (
-    DirectionTrainingType,
-)
-from webinar.domain.enums import (
-    EvaluationType,
-    HomeWorkStatusType,
-)
 from webinar.domain.types import TgUserId
-from webinar.infrastructure.postgres.repository.admin import (
-    AdminRepositoryImpl,
-)
 from webinar.infrastructure.postgres.repository.homework import (
     HomeWorkRepositoryImpl,
 )
+from webinar.presentation.annotaded import (
+    ReadAdminDataByTgUserIdDepends,
+    ReadHomeworkAndUserInfoByDBIdDepends,
+    ReadUserHomeworksForPaginationDepends,
+    TgDeleteMessageDepends, UpdateHomeworkEvolutionAndStatusDepends,
+)
+from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import (
     Pagination,
@@ -47,9 +45,12 @@ async def error_key(error: ErrorEvent, state: FSMContext, keyboard, is_super_adm
     update = error.update
     if update.message:
         message = update.message
-    elif update.callback_query.message:
-        message = update.callback_query.message
-        if isinstance(message, InaccessibleMessage):
+    elif update.callback_query:
+        if update.callback_query.message:
+            message = update.callback_query.message
+            if isinstance(message, InaccessibleMessage):
+                raise error.exception
+        else:
             raise error.exception
     else:
         raise error.exception
@@ -58,16 +59,17 @@ async def error_key(error: ErrorEvent, state: FSMContext, keyboard, is_super_adm
         reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
     )
     await state.clear()
-    
 
 
 @route.callback_query(F.data == "homeworks")
+@inject(InjectStrategy.HANDLER)
 async def pagination_handler(
     event: CallbackQuery,
     state: FSMContext,
     keyboard: KeyboardFactory,
-    homework_repository: HomeWorkRepositoryImpl,
-    admin_repository: AdminRepositoryImpl,
+    read_admin_data: ReadAdminDataByTgUserIdDepends,
+    read_user_homeworks: ReadUserHomeworksForPaginationDepends,
+    tg_message_delete: TgDeleteMessageDepends,
     config: ConfigFactory,
     is_super_admin: bool,
 ) -> None:
@@ -79,11 +81,9 @@ async def pagination_handler(
     
     telegram_user_id = TgUserId(event.from_user.id)
     count_homeworks = (
-        10**20 if is_super_admin else config.config.const.count_homeworks
+        100_000_000 if is_super_admin else config.config.const.count_homeworks
     )
-    count_homeworks_in_pagination = (
-        config.config.const.count_homeworks_in_pagination
-    )
+    count_homeworks_in_pagination = config.config.const.count_homeworks_in_pagination
     if is_super_admin:
         direction_training = [
             DirectionTrainingType.SMM,
@@ -91,30 +91,28 @@ async def pagination_handler(
         ]
         letters_range, numbers_range = None, True
     else:
-        admin_entity = await admin_repository.read_data_by_telegram_user_id(
+        admin_entity = await read_admin_data(
             TgUserIdDTO(telegram_user_id)
         )
         direction_training = [admin_entity.direction_training]
         letters_range = admin_entity.letters_range
         numbers_range = admin_entity.numbers_range
     
-    homework_dto = HomeWorkPaginationDTO(
-        telegram_user_id=telegram_user_id,
-        count_homeworks=count_homeworks,
-        direction_training=direction_training,
-        numbers_range=numbers_range,
-        letters_range=letters_range,
-        limit=count_homeworks_in_pagination,
-        offset=0 * count_homeworks_in_pagination,
-    )
     try:
-        homework_entity = await homework_repository.read_pagination(
-            homework_dto
+        homework_entity = await read_user_homeworks(
+            HomeWorkPaginationDTO(
+                telegram_user_id=telegram_user_id,
+                count_homeworks=count_homeworks,
+                direction_training=direction_training,
+                numbers_range=numbers_range,
+                letters_range=letters_range,
+                limit=count_homeworks_in_pagination,
+                offset=0 * count_homeworks_in_pagination,
+            )
         )
-    except NotFoundHomeworks:
+    except NoFoundHomeworksForPagination:
         await event.answer("Домашних заданий нет", show_alert=True)
         return None
-    
     try:
         await message.edit_text(
             "Список сданных работ",
@@ -126,6 +124,12 @@ async def pagination_handler(
             ),
         )
     except TelegramBadRequest:
+        await tg_message_delete(
+            DeleteMessageData(
+                chat_id=event.message.chat.id,
+                message_id=event.message.message_id
+            )
+        )
         await message.answer(
             "Список сданных работ",
             reply_markup=keyboard.inline.pagination_homeworks(
@@ -140,15 +144,17 @@ async def pagination_handler(
 
 
 @route.callback_query(AdminHomeWorksState.pagination, Pagination.filter())
+@inject(InjectStrategy.HANDLER)
 async def pagination_h(
     event: CallbackQuery,
     state: FSMContext,
-    homework_repository: HomeWorkRepositoryImpl,
-    admin_repository: AdminRepositoryImpl,
     callback_data: Pagination,
     keyboard: KeyboardFactory,
     config: ConfigFactory,
     is_super_admin: bool,
+    read_admin_data: ReadAdminDataByTgUserIdDepends,
+    read_user_homeworks: ReadUserHomeworksForPaginationDepends,
+    tg_message_delete: TgDeleteMessageDepends,
 ) -> None:
     if event.message is None:
         return
@@ -162,11 +168,9 @@ async def pagination_h(
     new_offset = offset_table[callback_data.action]
     telegram_user_id = TgUserId(event.from_user.id)
     count_homeworks = (
-        config.config.const.count_homeworks if not is_super_admin else 10**20
+        config.config.const.count_homeworks if not is_super_admin else 100_000_000
     )
-    count_homeworks_in_pagination = (
-        config.config.const.count_homeworks_in_pagination
-    )
+    count_homeworks_in_pagination = config.config.const.count_homeworks_in_pagination
     if is_super_admin:
         direction_training = [
             DirectionTrainingType.SMM,
@@ -174,33 +178,31 @@ async def pagination_h(
         ]
         letters_range, numbers_range = None, True
     else:
-        admin_entity = await admin_repository.read_data_by_telegram_user_id(
-            TgUserIdDTO(telegram_user_id)
-        )
+        admin_entity = await read_admin_data(TgUserIdDTO(telegram_user_id))
         direction_training = [admin_entity.direction_training]
         letters_range = admin_entity.letters_range
         numbers_range = admin_entity.numbers_range
     
-    homework_dto = HomeWorkPaginationDTO(
-        telegram_user_id=telegram_user_id,
-        count_homeworks=count_homeworks,
-        direction_training=direction_training,
-        numbers_range=numbers_range,
-        letters_range=letters_range,
-        limit=count_homeworks_in_pagination,
-        offset=new_offset * count_homeworks_in_pagination,
-    )
     try:
-        homework_entity = await homework_repository.read_pagination(
-            homework_dto
+        homework_entity = await read_user_homeworks(
+            HomeWorkPaginationDTO(
+                telegram_user_id=telegram_user_id,
+                count_homeworks=count_homeworks,
+                direction_training=direction_training,
+                numbers_range=numbers_range,
+                letters_range=letters_range,
+                limit=count_homeworks_in_pagination,
+                offset=new_offset * count_homeworks_in_pagination,
+            )
         )
-    except NotFoundHomeworks:
+    except NoFoundHomeworksForPagination:
         await pagination_handler(
             event,
             state,
             keyboard,
-            homework_repository,
-            admin_repository,
+            read_admin_data,
+            read_user_homeworks,
+            tg_message_delete,
             config,
             is_super_admin,
         )
@@ -222,24 +224,21 @@ async def pagination_h(
 @route.callback_query(
     SelectHomeWorkByDBId.filter(), AdminHomeWorksState.pagination
 )
+@inject(InjectStrategy.HANDLER)
 async def select_homework_handler(
     event: CallbackQuery,
     state: FSMContext,
-    homework_repository: HomeWorkRepositoryImpl,
-    admin_repository: AdminRepositoryImpl,
     callback_data: SelectHomeWorkByDBId,
+    use_case: ReadHomeworkAndUserInfoByDBIdDepends,
     keyboard: KeyboardFactory,
 ) -> None:
     if event.message is None:
         return
-    message = event.message
-    if isinstance(message, InaccessibleMessage):
+    if isinstance(event.message, InaccessibleMessage):
         return
     
     homework_db_id = callback_data.db_id
-    model = await homework_repository.read_homework_by_db_id_and_user_info(
-        HomeWorkIdDTO(homework_db_id)
-    )
+    model = await use_case(HomeWorkIdDTO(homework_db_id))
     surname = model.surname.title()
     name = model.name[0].title()
     date_time = model.date_time_registration.strftime("%d.%m")
@@ -250,7 +249,7 @@ async def select_homework_handler(
         sup = f"{surname} {name}."
     
     try:
-        await message.edit_text(
+        await event.message.edit_text(
             f"Работа {sup}\n{model.email}\n"
             f"Направление: {model.direction_training}\n"
             f"Сдана: {date_time}\n"
@@ -262,7 +261,7 @@ async def select_homework_handler(
             disable_web_page_preview=True,
         )
     except TelegramBadRequest:
-        await message.edit_text(
+        await event.message.edit_text(
             f"Работа {sup}\n{model.email}\n"
             f"Направление: {model.direction_training}\n"
             f"Сдана: {date_time}\n"
@@ -287,63 +286,60 @@ async def select_homework_handler(
     AdminHomeWorksState.select_homework,
     flags=dict(repo_uow=True),
 )
+@inject(InjectStrategy.HANDLER)
 async def xz_handler(
     event: CallbackQuery,
     bot: Bot,
     state: FSMContext,
-    homework_repository: HomeWorkRepositoryImpl,
     keyboard: KeyboardFactory,
+    use_case: UpdateHomeworkEvolutionAndStatusDepends,
     is_super_admin: bool,
 ) -> None:
     if event.message is None:
-        return
-    message = event.message
-    if isinstance(message, InaccessibleMessage):
-        return
-    
+        return None
+    if isinstance(event.message, InaccessibleMessage):
+        return None
     if event.data is None:
-        return
+        return None
     
-    cd = event.data
-    evaluation = (
-        EvaluationType.OK if cd == "select_ok" else EvaluationType.COOL
-    )
+    evaluation = EvaluationType.OK if event.data == "select_ok" else EvaluationType.COOL
     state_data = await state.get_data()
-    await homework_repository.update_evaluation(
-        UpdatingEvaluationByIdDTO(
+    await use_case(
+        UpdateHomeworkEvolutionAndStatusDTO(
             db_id=state_data["homework_db_id"],
             status_type=HomeWorkStatusType.ACCEPTED,
             evaluation=evaluation,
         )
     )
-    await message.edit_text(
+    await event.message.edit_text(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
     )
     await state.clear()
 
 
 @route.callback_query(F.data == "accept_homework", flags=dict(repo_uow=True))
+@inject(InjectStrategy.HANDLER)
 async def accept_homework_handler(
     event: CallbackQuery,
     bot: Bot,
     state: FSMContext,
-    homework_repository: HomeWorkRepositoryImpl,
     keyboard: KeyboardFactory,
     is_super_admin: bool,
+    tg_delete_message: TgDeleteMessageDepends,
 ) -> None:
     if event.message is None:
         return
-    message = event.message
-    if isinstance(message, InaccessibleMessage):
+    if isinstance(event.message, InaccessibleMessage):
         return
     
     state_data = await state.get_data()
-    if msg_id_ := state_data.get("msg_id"):
-        with suppress(TelegramBadRequest):
-            with suppress(TelegramBadRequest):
-                await bot.delete_message(
-                    chat_id=event.message.chat.id, message_id=msg_id_
-                )
+    if message_id := state_data.get("msg_id"):
+        await tg_delete_message(
+            DeleteMessageData(
+                chat_id=event.message.chat.id,
+                message_id=message_id
+            )
+        )
     await homework_repository.update_type(
         UpdatingTypeByIdDTO(
             db_id=state_data["homework_db_id"],
@@ -354,7 +350,7 @@ async def accept_homework_handler(
         chat_id=state_data["telegram_chat_id"],
         text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> была принята',
     )
-    await message.edit_text(
+    await event.message.edit_text(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
     )
     await state.clear()
@@ -413,7 +409,8 @@ async def ask_comments_handler(
     )
     await bot.send_message(
         chat_id=state_data["telegram_chat_id"],
-        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был отправлен с комментарием:\n'
+        text=f'<u>{HOMEWORKS_TEXT_FROM_SPREADSHEETS[state_data["number"]]}</u> был отправлен с '
+             f'комментарием:\n'
              f'{comments}',
     )
     await event.answer(

@@ -13,6 +13,8 @@ from webinar.presentation.broker_message.di import (
 from webinar.presentation.broker_message.handlers.main import route
 
 
+# TODO: Добавить bot id в саджекты
+
 async def broker_message(
     pool: AsyncConnectionPool[AsyncConnection[DictRow]],
     config_factory: ConfigFactory

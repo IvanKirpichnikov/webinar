@@ -67,7 +67,7 @@ async def mailing_handler(
     )
     await broker.publish(
         message=lz4.frame.compress(orjson.dumps(payload)),
-        subject="start-mailing",
+        subject="start-mailing-aa",
     )
     await event.answer(
         "Рассылка началась",

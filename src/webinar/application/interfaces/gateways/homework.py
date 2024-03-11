@@ -6,8 +6,7 @@ from webinar.application.dto.homework import (
     HomeWorkIdDTO,
     HomeWorkPaginationDTO,
     TgUserIdAndStatusTypeDTO,
-    UpdatingEvaluationByIdDTO,
-    UpdatingTypeAndCommentByIdDTO,
+    UpdateHomeworkEvolutionAndStatusDTO, UpdatingTypeAndCommentByIdDTO,
 )
 from webinar.application.use_case.homeworks.update_homework_status import UpdateHomeWorkStatusDTO
 from webinar.domain.models.homework import (
@@ -67,13 +66,13 @@ class HomeWorkGateway(Protocol):
         raise NotImplementedError
     
     @abstractmethod
-    async def read_homework_by_db_id_and_user_info(
+    async def read_homework_and_user_info_by_db_id(
         self, model: HomeWorkIdDTO
     ) -> HomeWorkAndUserInfoEntity:
         raise NotImplementedError
     
     @abstractmethod
-    async def update_evaluation(
-        self, model: UpdatingEvaluationByIdDTO
+    async def update_evolution_and_status(
+        self, model: UpdateHomeworkEvolutionAndStatusDTO
     ) -> None:
         raise NotImplementedError
