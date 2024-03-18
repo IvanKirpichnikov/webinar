@@ -95,7 +95,7 @@ async def ask_user_id(
     await state.set_state(AddAdminState.ask_user_id)
 
 
-@route.message(F.text.as_("user_id"), AddAdminState.ask_user_id)
+@route.message(F.text.as_("user_id_"), AddAdminState.ask_user_id)
 @inject(InjectStrategy.HANDLER)
 async def ask_webinar_type(
     event: Message,
@@ -103,10 +103,10 @@ async def ask_webinar_type(
     keyboard: KeyboardFactory,
     is_super_admin: bool,
     tg_delete_message: TgDeleteMessageDepends,
-    user_id: str,
+    user_id_: str,
 ) -> None:
     try:
-        user_id = TgUserId(user_id)
+        user_id = TgUserId(int(user_id_))
     except ValueError:
         msg = await event.answer(
             "Вы отправили не правильный айди. Повторите попытку.",
@@ -131,15 +131,13 @@ async def ask_webinar_type(
         try:
             msg = await event.answer(
                 "Вы хотите добавить этого юзера?\nЗа какое направление он будет отвечает?",
-                reply_markup=keyboard.inline.select_direction_training_for(
-                    user_id
-                ),
+                reply_markup=keyboard.inline.select_direction_training_for(user_id),
             )
         except TelegramBadRequest:
             msg = await event.answer(
                 "Вы хотите добавить этого юзера?\nЗа какое направление он будет отвечает?",
                 reply_markup=keyboard.inline.select_direction_training_for(
-                    user_id, True
+                    user_id, False
                 ),
             )
     except TelegramBadRequest:

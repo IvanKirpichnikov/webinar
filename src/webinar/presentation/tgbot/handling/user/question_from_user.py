@@ -14,11 +14,16 @@ from aiogram.types import (
 
 from webinar.application.dto.common import TgUserIdDTO
 from webinar.application.exceptions import NotFoundAdmin
-from webinar.application.interfaces.delete_message import DeleteMessageData, TgDeleteMessage
-from webinar.application.use_case.admin.read_admin_submit_user_question import ReadAdminSubmitUserQuestionData
+from webinar.application.interfaces.delete_message import DeleteMessageData
+from webinar.application.use_case.admin.read_admin_submit_user_question import \
+    ReadAdminSubmitUserQuestionData
 from webinar.config import ConfigFactory
 from webinar.domain.types import TgChatId, TgUserId
-from webinar.presentation.annotaded import ReadAdminSubmitUserQuestionDepends, ReadUserDataDepends
+from webinar.presentation.annotaded import (
+    ReadAdminSubmitUserQuestionDepends,
+    ReadUserDataDepends,
+    TgDeleteMessageDepends,
+)
 from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.states import SendYourQuestion
@@ -41,7 +46,7 @@ async def v_handler(
     event: CallbackQuery,
     state: FSMContext,
     keyboard: KeyboardFactory,
-    tg_delete_message: TgDeleteMessage,
+    tg_delete_message: TgDeleteMessageDepends,
 ) -> None:
     if event.message is None:
         return
@@ -82,7 +87,7 @@ async def get_question_handler(
     bot: Bot,
     state: FSMContext,
     keyboard: KeyboardFactory,
-    tg_delete_message: TgDeleteMessage,
+    tg_delete_message: TgDeleteMessageDepends,
 ) -> None:
     if event.text:
         text_attribute = "text"
@@ -109,7 +114,6 @@ async def get_question_handler(
         update={
             text_attribute: f'Ваш вопрос. Номер #q{number_question} \n"{question_text}"'
         },
-        deep=True,
     ).as_(bot)
     await new_event.send_copy(
         chat_id=event.chat.id,
@@ -154,13 +158,20 @@ async def send_question_handler(
     except NotFoundAdmin:
         admin_chat_id = config.config.const.owner_chat_id
     else:
-        admin_chat_id = admin_chat_id_dto.telegram_chat_id
+        if admin_chat_id_dto is None:
+            admin_chat_id = config.config.const.owner_chat_id
+        else:
+            admin_chat_id = admin_chat_id_dto.telegram_chat_id
     
     number_question = state_data["number_question"]
     chat_id = event.message.chat.id
-    
+    if event.from_user.username:
+        url = '@' + event.from_user.username
+    else:
+        url = html.link(event.from_user.full_name, f"tg://user?id={event.from_user.id}")
     text = (
         f'ФИО: {user_entity.sup}\n'
+        f'Телеграм: {url}\n'
         f'Почта: {user_entity.email}\n'
         f'Номер вопроса: #q{state_data["number_question"]}\n'
         f'Вопрос: {state_data["question_text"]}'
@@ -180,7 +191,7 @@ async def send_question_handler(
         return None
     
     try:
-        await new_model.send_copy(chat_id=admin_chat_id)
+        await new_model.send_copy(chat_id=admin_chat_id, parse_mode='HTML')
     except TelegramBadRequest:
         new_model = new_model.model_copy(
             update={
@@ -188,7 +199,7 @@ async def send_question_handler(
                     chat_id=TgChatId(chat_id),
                     number_question=number_question,
                     user_id=event.from_user.id,
-                    url=True,
+                    url=False,
                 )
             }
         ).as_(bot)

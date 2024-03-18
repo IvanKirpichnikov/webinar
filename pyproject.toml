@@ -32,9 +32,6 @@ dev = [
 [project.scripts]
 webinar-bot = "webinar.main.cli.__main__:main"
 
-[tool.setuptools]
-package-dir = { "" = "src" }
-
 [[project.authors]]
 name = "Ivan Kirpichnikov"
 email = "mmssvvvv570@gmail.com"

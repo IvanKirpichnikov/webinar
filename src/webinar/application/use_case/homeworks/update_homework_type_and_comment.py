@@ -2,19 +2,25 @@ from abc import abstractmethod
 from logging import getLogger
 from typing import Protocol
 
-from webinar.application.dto.homework import UpdateHomeWorkStatusDTO
+from webinar.application.dto.homework import (
+    UpdateHomeworkStatusAndCommentByIdDTO,
+)
 from webinar.application.interfaces.gateways.homework import HomeWorkGateway
 from webinar.application.interfaces.uow import DBUoW
 from webinar.application.use_case.base import UseCase
 
 
-class UpdateHomeWorkStatus(UseCase[UpdateHomeWorkStatusDTO, None], Protocol):
+class UpdateHomeWorkTypeAndComment(
+    UseCase[UpdateHomeworkStatusAndCommentByIdDTO, None], Protocol
+):
     @abstractmethod
-    async def __call__(self, data: UpdateHomeWorkStatusDTO) -> None:
+    async def __call__(
+        self, data: UpdateHomeworkStatusAndCommentByIdDTO
+    ) -> None:
         raise NotImplementedError
 
 
-class UpdateHomeWorkStatusImpl(UpdateHomeWorkStatus):
+class UpdateHomeWorkTypeAndCommentImpl(UpdateHomeWorkTypeAndComment):
     logger = getLogger(__name__)
     
     def __init__(
@@ -25,10 +31,10 @@ class UpdateHomeWorkStatusImpl(UpdateHomeWorkStatus):
         self._db_uow = db_uow
         self._homework_gateway = homework_gateway
     
-    async def __call__(self, data: UpdateHomeWorkStatusDTO) -> None:
+    async def __call__(self, data: UpdateHomeworkStatusAndCommentByIdDTO) -> None:
         async with self._db_uow.transaction():
-            await self._homework_gateway.update_status(data)
+            await self._homework_gateway.update_type_and_comment(data)
         self.logger.info(
-            'Update homework db_id=%r status=%r'
-            % (data.db_id, data.status_type)
+            'Update homework db_id=%r comments=%r and status=%r'
+            % (data.db_id, data.comments, data.status_type)
         )

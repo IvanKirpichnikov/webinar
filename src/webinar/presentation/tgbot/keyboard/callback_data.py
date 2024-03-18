@@ -1,14 +1,14 @@
 from typing import (
     Literal,
-    TypeAlias
+    TypeAlias,
 )
 
 from aiogram.filters.callback_data import CallbackData
 
-from webinar.domain.enums import DirectionTrainingType
+from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.domain.types import (
     DataBaseId,
-    TgChatId
+    TgChatId,
 )
 
 

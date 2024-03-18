@@ -3,10 +3,18 @@ from dataclasses import dataclass
 from webinar.application.dto.base import DataAccessObject
 from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.domain.types import (
-    TgChatId,
-    TgUserId
+    DataBaseId, TgChatId,
+    TgUserId,
 )
 
+
+@dataclass(frozen=True, slots=True)
+class EmailDTO:
+    email: str
+
+@dataclass(frozen=True, slots=True)
+class DbIdDTO:
+    db_id: DataBaseId
 
 @dataclass(frozen=True, slots=True)
 class TgUserIdDTO(DataAccessObject):

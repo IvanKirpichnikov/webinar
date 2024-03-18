@@ -10,8 +10,8 @@ from aiogram.types import (
 )
 
 from webinar.application.dto.common import TgUserIdDTO
+from webinar.application.dto.homework import UpdateHomeWorkStatusDTO
 from webinar.application.use_case.homeworks.read_user_homeworks import ReadUserHomeworkError
-from webinar.application.use_case.homeworks.update_homework_status import UpdateHomeWorkStatusDTO
 from webinar.domain.enums.homework import HomeWorkStatusType
 from webinar.domain.types import TgUserId
 from webinar.presentation.annotaded import ReadUserHomeWorksDepends, UpdateHomeWorkStatusDepends
@@ -29,9 +29,7 @@ route.callback_query(
 )
 
 
-@route.callback_query(F.data == "my_homeworks")
-@inject(InjectStrategy.HANDLER)
-async def my_homeworks_handler(
+async def _my_homeworks_handler(
     event: CallbackQuery,
     keyboard: KeyboardFactory,
     read_user_homeworks: ReadUserHomeWorksDepends,
@@ -63,6 +61,15 @@ async def my_homeworks_handler(
         parse_mode=ParseMode.HTML,
     )
 
+@route.callback_query(F.data == "my_homeworks")
+@inject(InjectStrategy.HANDLER)
+async def my_homeworks_handler(
+    event: CallbackQuery,
+    keyboard: KeyboardFactory,
+    read_user_homeworks: ReadUserHomeWorksDepends,
+) -> None:
+    await _my_homeworks_handler(event, keyboard, read_user_homeworks)
+
 
 @route.callback_query(ReCheckingHomework.filter(), flags=dict(repo_uow=True))
 @inject(InjectStrategy.HANDLER)
@@ -82,4 +89,4 @@ async def update_homework_handler(
             status_type=HomeWorkStatusType.UNDER_INSPECTION,
         )
     )
-    await my_homeworks_handler(event, keyboard, read_user_homeworks)
+    await _my_homeworks_handler(event, keyboard, read_user_homeworks)

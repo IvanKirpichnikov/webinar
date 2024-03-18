@@ -1,14 +1,15 @@
 from abc import abstractmethod
-from typing import Protocol, TYPE_CHECKING
+from typing import Any, Protocol, TYPE_CHECKING
 
-from webinar.application.dto.common import TgUserIdDTO
+from webinar.application.dto.common import DbIdDTO, TgUserIdDTO
 from webinar.application.dto.homework import (
     HomeWorkIdDTO,
     HomeWorkPaginationDTO,
     TgUserIdAndStatusTypeDTO,
-    UpdateHomeworkEvolutionAndStatusDTO, UpdatingTypeAndCommentByIdDTO,
+    UpdateHomeworkEvolutionAndStatusDTO,
+    UpdateHomeworkStatusAndCommentByIdDTO,
+    UpdateHomeWorkStatusDTO,
 )
-from webinar.application.use_case.homeworks.update_homework_status import UpdateHomeWorkStatusDTO
 from webinar.domain.models.homework import (
     HomeWorkAndUserInfoEntity,
     HomeWorks,
@@ -26,6 +27,10 @@ class HomeWorkGateway(Protocol):
         raise NotImplementedError
     
     @abstractmethod
+    async def delete_by_db_id(self, model: DbIdDTO) -> None:
+        raise NotImplementedError
+    
+    @abstractmethod
     async def read_all_by_telegram_user_id(
         self, model: TgUserIdDTO
     ) -> HomeWorks | None:
@@ -38,12 +43,12 @@ class HomeWorkGateway(Protocol):
         raise NotImplementedError
     
     @abstractmethod
-    async def update_status(self, model: 'UpdateHomeWorkStatusDTO') -> None:
+    async def update_status(self, model: UpdateHomeWorkStatusDTO) -> None:
         raise NotImplementedError
     
     @abstractmethod
     async def update_type_and_comment(
-        self, model: UpdatingTypeAndCommentByIdDTO
+        self, model: UpdateHomeworkStatusAndCommentByIdDTO
     ) -> None:
         raise NotImplementedError
     
@@ -63,6 +68,10 @@ class HomeWorkGateway(Protocol):
     async def read_from_offset(
         self, model: HomeWorkPaginationDTO
     ) -> UserHomeWorks | None:
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def read_stats(self) -> dict[str, Any]:
         raise NotImplementedError
     
     @abstractmethod

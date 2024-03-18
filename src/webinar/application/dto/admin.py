@@ -6,7 +6,6 @@ from webinar.domain.types import TgUserId
 
 
 @dataclass(frozen=True, slots=True)
-@dataclass(frozen=True, slots=True)
 class ReadAdminByLettersRangeData:
     telegram_user_id: TgUserId
     direction_training: DirectionTrainingType
@@ -17,8 +16,3 @@ class CreateAdminDTO(TgUserIdDTO):
     direction_training: DirectionTrainingType
     letters_range: str | None = None
     numbers_range: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class GetAdminFromDirectionTraining(TgUserIdDTO):
-    direction_training: DirectionTrainingType

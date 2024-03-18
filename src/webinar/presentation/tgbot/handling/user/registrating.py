@@ -122,7 +122,7 @@ async def ask_sup_callback_handler(
     await state.set_state(RegisteringState.ask_sup)
     await event.message.edit_text(
         (
-            "Введите ФИО в следующем формате: <Фамилия> <Имя> <Отчество>\n"
+            "Введите ФИО в следующем формате: Фамилия Имя Отчество\n"
             "Например Иванов Иван Иванович.\n"
             "В случае отсутствия отчества, вы можете не писать его."
         ),

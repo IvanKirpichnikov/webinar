@@ -1,11 +1,12 @@
-from contextlib import suppress
-
 from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import and_f, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 
+from webinar.application.interfaces.delete_message import DeleteMessageData
+from webinar.presentation.annotaded import TgDeleteMessageDepends
+from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import (
     SendAnswerQuestion,
@@ -37,8 +38,7 @@ async def send_question_callback_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
-        returnR
+        return
     
     question_number = callback_data.number_question
     msg = await event.message.answer(
@@ -58,35 +58,38 @@ async def send_question_callback_handler(
     SendAnswerQuestionState.ask_answer,
     F.data == 'back'
 )
+@inject(InjectStrategy.HANDLER)
 async def back(
     event: CallbackQuery,
-    bot: Bot,
     state: FSMContext,
-    keyboard: KeyboardFactory
+    keyboard: KeyboardFactory,
+    tg_message_delete: TgDeleteMessageDepends,
 ) -> None:
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     state_data = await state.get_data()
     msg_id = state_data['msg_id']
-    with suppress(TelegramBadRequest):
-        await bot.delete_message(
+    await tg_message_delete(
+        DeleteMessageData(
             chat_id=event.message.chat.id,
             message_id=msg_id
         )
+    )
     await state.clear()
 
 
 @route.message(SendAnswerQuestionState.ask_answer, F.text)
+@inject(InjectStrategy.HANDLER)
 async def send_question_message_handler(
     event: Message,
     bot: Bot,
     state: FSMContext,
     keyboard: KeyboardFactory,
     is_super_admin: bool,
+    tg_message_delete: TgDeleteMessageDepends,
 ) -> None:
     if event.text is None:
         return None
@@ -99,19 +102,21 @@ async def send_question_message_handler(
             f'Ответ на вопрос #q{data["question_number"]}\n{event.text}',
         )
     except TelegramBadRequest:
-        await event.answer("Ошибка", reply_markup=reply_markup)
-        return None
-    question_msg_id = data['question_msg_id']
-    msg_id = data['msg_id']
-    with suppress(TelegramBadRequest):
-        await bot.delete_messages(
-            chat_id=event.chat.id,
-            message_ids=[
-                msg_id, question_msg_id
-            ]
+        await event.answer(
+            "Ошибка. Человек заблокировал бота или он не писал боту",
+            reply_markup=reply_markup
         )
-        await event.delete()
+        return None
+    
     await event.answer(
         "Ответ был успешно отправлен", reply_markup=reply_markup
     )
     await state.clear()
+    
+    message_ids = [data['msg_id'], data['question_msg_id'], event.message_id]
+    await tg_message_delete(
+        DeleteMessageData(
+            chat_id=event.chat.id,
+            message_id=message_ids
+        )
+    )

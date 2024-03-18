@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from aiogram import Bot
 from faststream import FastStream
 from faststream.nats import NatsBroker
@@ -13,18 +15,19 @@ from webinar.presentation.broker_message.di import (
 from webinar.presentation.broker_message.handlers.main import route
 
 
-# TODO: Добавить bot id в саджекты
+logger = getLogger(__name__)
+
 
 async def broker_message(
     pool: AsyncConnectionPool[AsyncConnection[DictRow]],
-    config_factory: ConfigFactory
+    config_factory: ConfigFactory,
 ) -> None:
     config = ConfigFactory().config
     
-    broker = NatsBroker(config.nats.url, connect_timeout=100)
+    broker = NatsBroker(config.nats.url, connect_timeout=100, logger=logger)
     broker.include_router(route)
     
-    app = FastStream(broker)
+    app = FastStream(broker, logger=logger)
     bot = Bot(config.bot.token)
     app.context.set_global('bot', bot)
     app.context.set_global("config", config_factory)

@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from logging import getLogger
 from typing import Protocol
 
 from webinar.application.dto.webinar import CreateWebinarDTO
@@ -15,6 +16,8 @@ class CreateWebinar(UseCase[CreateWebinarDTO, None], Protocol):
 
 
 class CreateWebinarImpl(CreateWebinar):
+    logger = getLogger(__name__)
+    
     def __init__(self, gateway: WebinarGateway, uow: DBUoW) -> None:
         self._uow = uow
         self._gateway = gateway
@@ -23,5 +26,13 @@ class CreateWebinarImpl(CreateWebinar):
         async with self._uow.transaction():
             result = await self._gateway.create(data)
         if result:
+            self.logger.info(
+                'Create webinar. %r'
+                % data
+            )
             return None
+        self.logger.warning(
+            'Not create webinar. %r'
+            % data
+        )
         raise DuplicateWebinar(data)

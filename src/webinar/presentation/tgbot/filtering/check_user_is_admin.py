@@ -7,16 +7,17 @@ from aiogram.types import (
 from webinar.application.dto.common import TgUserIdDTO
 from webinar.domain.types import TgUserId
 from webinar.infrastructure.adapters.cache import CacheStore
-from webinar.infrastructure.postgres.repository.admin import AdminRepositoryImpl
-from webinar.presentation.annotaded import ConfigDepends
+from webinar.presentation.annotaded import ConfigDepends, UserIsAdminDepends
+from webinar.presentation.inject import inject, InjectStrategy
 
 
 class CheckUserIsAdminRegisteringFilterImpl(BaseFilter):
+    @inject(InjectStrategy.HANDLER)
     async def __call__(
         self,
         event: TelegramObject,
         event_from_user: User | None,
-        admin_repository: AdminRepositoryImpl,
+        use_case: UserIsAdminDepends,
         config: ConfigDepends,
         cache: CacheStore
     ) -> bool:
@@ -31,6 +32,6 @@ class CheckUserIsAdminRegisteringFilterImpl(BaseFilter):
             return cache.exists_admin[user_id].result
         
         dto = TgUserIdDTO(TgUserId(user_id))
-        data = await admin_repository.exists(dto)
+        data = await use_case(dto)
         cache.exists_admin[user_id] = data
         return data.result

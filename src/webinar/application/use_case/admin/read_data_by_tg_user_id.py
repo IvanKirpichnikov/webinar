@@ -18,5 +18,5 @@ class ReadAdminDataByTgUserIdImpl(ReadAdminDataByTgUserId):
         self._gateway = gateway
     
     async def __call__(self, data: TgUserIdDTO) -> AdminDataInfo:
-        result = await self._gateway.read_data_by_telegram_user_id(self._gateway)
+        result = await self._gateway.read_data_by_telegram_user_id(data)
         return result

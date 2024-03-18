@@ -10,16 +10,12 @@ class NotFoundAdmin(NotFoundError):
     pass
 
 
-
-
-
+class NotFoundUser(BaseAppError):
+    pass
 
 
 class NotFoundUsers(NotFoundUser):
     pass
-
-
-
 
 
 class AdminCreated(BaseAppError):

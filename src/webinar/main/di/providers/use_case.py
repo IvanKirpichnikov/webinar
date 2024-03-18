@@ -13,7 +13,12 @@ from webinar.application.use_case.admin.read_data_by_tg_user_id import (
     ReadAdminDataByTgUserId,
     ReadAdminDataByTgUserIdImpl,
 )
+from webinar.application.use_case.get_stats import GetStats, GetStatsImpl
 from webinar.application.use_case.homeworks.add_user_homework import AddUserHomeWork, AddUserHomeWorkImpl
+from webinar.application.use_case.homeworks.delete_by_db_id import (
+    DeleteHomeworkByDbId,
+    DeleteHomeworkByDbIdImpl,
+)
 from webinar.application.use_case.homeworks.read_and_user_info_by_db_id import \
     (
     ReadHomeworkAndUserInfoByDBId, ReadHomeworkAndUserInfoByDBIdImpl,
@@ -28,7 +33,14 @@ from webinar.application.use_case.homeworks.update_assessment_and_status import 
     UpdateHomeworkEvolutionAndStatus, UpdateHomeworkEvolutionAndStatusImpl,
 )
 from webinar.application.use_case.homeworks.update_homework_status import UpdateHomeWorkStatus, UpdateHomeWorkStatusImpl
+from webinar.application.use_case.homeworks.update_homework_type_and_comment import \
+    (
+    UpdateHomeWorkTypeAndComment, UpdateHomeWorkTypeAndCommentImpl,
+)
 from webinar.application.use_case.user.add_user import AddUserUseCase, AddUserUseCaseImpl
+from webinar.application.use_case.user.delete_user import DeleteUserByEmail, DeleteUserByEmailImpl
+from webinar.application.use_case.user.exists import UserIsExists, UserIsExistsImpl
+from webinar.application.use_case.user.is_admin import UserIsAdmin, UserIsAdminImpl
 from webinar.application.use_case.user.read_user_data import ReadUserData, ReadUserDataImpl
 from webinar.application.use_case.webinars.create import CreateWebinar, CreateWebinarImpl
 from webinar.application.use_case.webinars.get_pagination import GetPaginationWebinars, GetPaginationWebinarsImpl
@@ -92,4 +104,28 @@ class UseCaseProvider(Provider):
     update_homework_en = provide(
         source=UpdateHomeworkEvolutionAndStatusImpl,
         provides=UpdateHomeworkEvolutionAndStatus
+    )
+    update_homework_type_and_comm = provide(
+        source=UpdateHomeWorkTypeAndCommentImpl,
+        provides=UpdateHomeWorkTypeAndComment
+    )
+    get_stats = provide(
+        source=GetStatsImpl,
+        provides=GetStats
+    )
+    user_is_admin = provide(
+        source=UserIsAdminImpl,
+        provides=UserIsAdmin
+    )
+    user_exists = provide(
+        source=UserIsExistsImpl,
+        provides=UserIsExists
+    )
+    delete_user_by_email = provide(
+        source=DeleteUserByEmailImpl,
+        provides=DeleteUserByEmail
+    )
+    delete_homework_by_db_id = provide(
+        source=DeleteHomeworkByDbIdImpl,
+        provides=DeleteHomeworkByDbId
     )

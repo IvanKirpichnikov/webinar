@@ -2,13 +2,10 @@ from abc import abstractmethod
 from typing import Protocol
 
 from webinar.application.dto.common import TgUserIdDTO
+from webinar.application.exceptions import NotFoundUser
 from webinar.application.interfaces.gateways.user import UserGateway
 from webinar.application.use_case.base import UseCase
 from webinar.domain.models.user import User
-
-
-class NotFoundUser(Exception):
-    pass
 
 
 class ReadUserData(UseCase[TgUserIdDTO, User], Protocol):

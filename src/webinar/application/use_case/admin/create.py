@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Protocol
 
 from webinar.application.dto.admin import CreateAdminDTO
@@ -13,6 +14,8 @@ class CreateAdmin(UseCase[CreateAdminDTO, None], Protocol):
 
 
 class CreateAdminImpl(CreateAdmin):
+    logger = getLogger(__name__)
+    
     def __init__(self, gateway: AdminGateway, uow: DBUoW) -> None:
         self._uow = uow
         self._gateway = gateway
@@ -21,5 +24,11 @@ class CreateAdminImpl(CreateAdmin):
         async with self._uow.transaction():
             result = await self._gateway.create(data)
         if result:
+            self.logger.info(
+                'Created admin. %r' % data
+            )
             return None
+        self.logger.warning(
+            'Not created admin. %r' % data
+        )
         raise AdminCreated(data)

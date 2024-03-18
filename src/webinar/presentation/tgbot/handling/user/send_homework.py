@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import cast
 
 from aiogram import F, Router
 from aiogram.enums import MessageEntityType
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
@@ -15,8 +17,12 @@ from webinar.application.interfaces.delete_message import DeleteMessageData
 from webinar.application.use_case.homeworks.add_user_homework import AddUserHomeWorkDTO
 from webinar.application.use_case.homeworks.read_user_homeworks import ReadUserHomeworkError
 from webinar.domain.enums.homework import HomeWorkStatusType
-from webinar.domain.types import TgUserId
-from webinar.presentation.annotaded import AddUserHomeWorkDepends, ReadUserHomeWorksDepends, TgDeleteMessageDepends
+from webinar.domain.types import HomeWorkNumber, TgUserId
+from webinar.presentation.annotaded import (
+    AddUserHomeWorkDepends,
+    ReadUserHomeWorksDepends,
+    TgDeleteMessageDepends,
+)
 from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import (
@@ -42,14 +48,16 @@ async def select_homework_number(
     if isinstance(event.message, InaccessibleMessage):
         return
     
+    message_ids = [event.message.message_id]
     state_data = await state.get_data()
     if message_id := state_data.get("msg_id"):
-        await tg_delete_message(
-            DeleteMessageData(
-                chat_id=event.message.chat.id,
-                message_id=message_id
-            )
+        message_ids.append(message_id)
+    await tg_delete_message(
+        DeleteMessageData(
+            chat_id=event.message.chat.id,
+            message_id=message_id
         )
+    )
     try:
         homeworks = await read_user_homeworks(
             TgUserIdDTO(TgUserId(event.from_user.id))
@@ -71,10 +79,16 @@ async def select_homework_number(
             )
         )
     
-    await event.message.edit_text(
-        "Выбери номер домашнего задания",
-        reply_markup=keyboard.inline.select_homework(ids)
-    )
+    try:
+        await event.message.edit_text(
+            "Выбери номер домашнего задания",
+            reply_markup=keyboard.inline.select_homework(cast(list[HomeWorkNumber], ids))
+        )
+    except TelegramBadRequest:
+        await event.message.answer(
+            "Выбери номер домашнего задания",
+            reply_markup=keyboard.inline.select_homework(cast(list[HomeWorkNumber], ids))
+        )
     await state.set_state(AskHomeWorkState.ask_number)
 
 
@@ -116,7 +130,7 @@ async def add_homework_handler(
     url_entity: MessageEntity,
     keyboard: KeyboardFactory,
     add_user_homework: AddUserHomeWorkDepends,
-    tg_delete_message: TgDeleteMessageDepends
+    tg_delete_message: TgDeleteMessageDepends,
 ) -> None:
     if event.text is None:
         return None
@@ -125,7 +139,7 @@ async def add_homework_handler(
     
     url = url_entity.extract_from(event.text)
     if not url.startswith("https://docs.google.com"):
-        await not_valid_url(event, state, keyboard)
+        await _not_valid_url(event, state, keyboard, tg_delete_message)
         return None
     
     state_data = await state.get_data()
@@ -155,12 +169,18 @@ async def add_homework_handler(
     await state.clear()
 
 
-@route.message(
-    AskHomeWorkState.ask_url,
-    ~F.entities.extract(F.type == MessageEntityType.URL),
-)
+@route.message(AskHomeWorkState.ask_url)
 @inject(InjectStrategy.HANDLER)
 async def not_valid_url(
+    event: Message,
+    state: FSMContext,
+    keyboard: KeyboardFactory,
+    tg_delete_message: TgDeleteMessageDepends
+) -> None:
+    await _not_valid_url(event, state, keyboard, tg_delete_message)
+
+
+async def _not_valid_url(
     event: Message,
     state: FSMContext,
     keyboard: KeyboardFactory,

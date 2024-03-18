@@ -38,6 +38,9 @@ class GetPaginationWebinarsImpl(GetPaginationWebinars):
         self, data: GetPaginationWebinarsData
     ) -> Webinars:
         result = await self._webinar_gateway.pagination(data)
+        if result is None:
+            raise NotFoundWebinars
+        
         if result.count > 0 and not result.webinars:
             raise NotFoundWebinars
         return result

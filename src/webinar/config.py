@@ -55,7 +55,7 @@ class Config:
 
 
 class ConfigFactory:
-    _cache_config: Config | None
+    _cache_config: Config | None = None
     retort = Retort(
         recipe=[
             loader(P[_GoogleSheetsConfig].data, loads, Chain.FIRST),

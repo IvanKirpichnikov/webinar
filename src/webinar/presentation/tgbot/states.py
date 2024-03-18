@@ -39,6 +39,7 @@ class AdminHomeWorksState(StatesGroup):
     ask_comments = State()
     pagination = State()
     select_homework = State()
+    ask_comment_delete = State()
 
 
 class SendAnswerQuestionState(StatesGroup):
@@ -48,3 +49,8 @@ class SendAnswerQuestionState(StatesGroup):
 class MailingState(StatesGroup):
     ask_direction = State()
     ask_message = State()
+
+
+class DeleteUser(StatesGroup):
+    ask_email = State()
+    confirm = State()

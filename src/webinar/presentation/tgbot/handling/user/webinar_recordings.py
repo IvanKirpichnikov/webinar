@@ -25,9 +25,7 @@ route.callback_query.filter(
 )
 
 
-@route.callback_query(F.data == "webinar_recordings")
-@inject(InjectStrategy.HANDLER)
-async def webinar_recordings_handler(
+async def _webinar_recordings_handler(
     event: CallbackQuery,
     state: FSMContext,
     config: ConfigFactory,
@@ -57,6 +55,17 @@ async def webinar_recordings_handler(
     )
     await state.set_data({"offset": 0})
     await state.set_state(WebinarPaginationState.pagination)
+
+@route.callback_query(F.data == "webinar_recordings")
+@inject(InjectStrategy.HANDLER)
+async def webinar_recordings_handler(
+    event: CallbackQuery,
+    state: FSMContext,
+    config: ConfigFactory,
+    keyboard: KeyboardFactory,
+    get_pagination_webinars: GetPaginationWebinarsDepends,
+) -> None:
+    await _webinar_recordings_handler(event, state, config, keyboard, get_pagination_webinars)
 
 
 @route.callback_query(Pagination.filter(), WebinarPaginationState.pagination)
@@ -88,7 +97,7 @@ async def webinar_pagination_handler(
         webinars = await get_pagination_webinars(pagination_dto)
     except NotFoundWebinars:
         if new_offset != 0:
-            await webinar_recordings_handler(
+            await _webinar_recordings_handler(
                 event,
                 state,
                 config,

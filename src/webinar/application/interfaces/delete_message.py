@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Protocol, TypeVar
 
 
-IN_DATA = TypeVar('IN_DATA')
-OUT_DATA = TypeVar('OUT_DATA')
+IN_DATA = TypeVar('IN_DATA', contravariant=True)
+OUT_DATA = TypeVar('OUT_DATA', covariant=True)
 
 
 class DeleteMessage(Protocol[IN_DATA, OUT_DATA]):

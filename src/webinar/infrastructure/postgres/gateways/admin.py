@@ -12,7 +12,10 @@ from typing import (
 from adaptix import as_is_loader, Retort
 from psycopg.errors import UniqueViolation
 
-from webinar.application.dto.admin import CreateAdminDTO, GetAdminFromDirectionTraining
+from webinar.application.dto.admin import (
+    CreateAdminDTO,
+    ReadAdminByLettersRangeData,
+)
 from webinar.application.dto.common import (
     DirectionsTrainingDTO,
     ResultExistsDTO,
@@ -162,8 +165,7 @@ class PostgresAdminGateway(PostgresGateway, AdminGateway):
         return self.retort.load(raw_data, AdminDataInfo)
     
     async def read_by_letters_range(
-        self,
-        model: GetAdminFromDirectionTraining
+        self, model: ReadAdminByLettersRangeData,
     ) -> TgChatIdDTO | None:
         sql = '''
             SELECT u.telegram_chat_id

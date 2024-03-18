@@ -1,12 +1,14 @@
 from abc import abstractmethod
-from typing import Protocol, TYPE_CHECKING
+from typing import Mapping, Protocol, TYPE_CHECKING
 
 from webinar.application.dto.common import (
     DirectionsTrainingDTO,
-    ResultExistsDTO,
+    DirectionTrainingDTO, EmailDTO, ResultExistsDTO,
     TgUserIdDTO,
 )
+from webinar.application.dto.user import UpdateUserDataGoogleSheetsDto
 from webinar.domain.models.user import User, Users
+from webinar.domain.types import TgUserId
 
 
 if TYPE_CHECKING:
@@ -14,6 +16,10 @@ if TYPE_CHECKING:
 
 
 class UserGateway(Protocol):
+    @abstractmethod
+    async def delete_by_email(self, model: EmailDTO) -> TgUserId | None:
+        raise NotImplementedError
+    
     @abstractmethod
     async def read_by_tg_user_id(
         self, model: TgUserIdDTO
@@ -26,6 +32,20 @@ class UserGateway(Protocol):
     
     @abstractmethod
     async def exists(self, model: TgUserIdDTO) -> ResultExistsDTO:
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def exists_by_email(self, model: EmailDTO) -> ResultExistsDTO:
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def read_user_and_he_homeworks(
+        self, model: DirectionTrainingDTO
+    ) -> list[UpdateUserDataGoogleSheetsDto]:
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def read_stats(self) -> Mapping[str, int]:
         raise NotImplementedError
     
     @abstractmethod

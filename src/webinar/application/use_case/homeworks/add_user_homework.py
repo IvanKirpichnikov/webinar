@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
+from logging import getLogger
 from typing import Protocol
 
 from psycopg.errors import UniqueViolation
@@ -32,8 +32,7 @@ class AddUserHomeWork(UseCase[AddUserHomeWorkDTO, None], Protocol):
 
 
 class AddUserHomeWorkImpl(AddUserHomeWork):
-    _db_uow: DBUoW
-    _homework_gateway: HomeWorkGateway
+    logger = getLogger(__name__)
     
     def __init__(
         self,
@@ -45,5 +44,9 @@ class AddUserHomeWorkImpl(AddUserHomeWork):
     
     async def __call__(self, data: AddUserHomeWorkDTO) -> None:
         async with self._db_uow.transaction():
-            with suppress(UniqueViolation):
+            try:
                 await self._homework_gateway.add_user_homework(data)
+            except UniqueViolation:
+                self.logger.info('Homework already have one. %r' % data)
+            else:
+                self.logger.info('Homework added. %r' % data)

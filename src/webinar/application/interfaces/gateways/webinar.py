@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class WebinarGateway(Protocol):
     @abstractmethod
-    async def create(self, model: CreateWebinarDTO) -> None:
+    async def create(self, model: CreateWebinarDTO) -> bool:
         raise NotImplementedError
 
     @abstractmethod

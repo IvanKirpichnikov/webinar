@@ -4,13 +4,11 @@ from psycopg import AsyncConnection
 from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from webinar.application.dto import DirectionTrainingDTO
-from webinar.domain.enums import (
-    DirectionTrainingType,
-)
+from webinar.application.dto.common import DirectionTrainingDTO
+from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.infrastructure.google_sheets.enums import WorkSheetId
 from webinar.infrastructure.google_sheets.gateway import GoogleSheetsAdapter
-from webinar.infrastructure.postgres.repository.user import UserRepositoryImpl
+from webinar.infrastructure.postgres.gateways.user import PostgresUserGateway
 
 
 route = NatsRouter()
@@ -30,7 +28,7 @@ async def update_data_handler(
         connect.row_factory = dict_row
         for training_type, work_sheet_id in training_types:
             dto = DirectionTrainingDTO(training_type)
-            data = await UserRepositoryImpl(connect).read_user_and_he_homeworks(dto)
+            data = await PostgresUserGateway(connect).read_user_and_he_homeworks(dto)
             await google_sheet.update_data(
                 work_sheet_id=work_sheet_id,
                 raw_data=data

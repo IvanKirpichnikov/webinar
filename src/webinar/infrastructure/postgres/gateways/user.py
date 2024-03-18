@@ -1,7 +1,4 @@
-from dataclasses import (
-    asdict,
-    astuple,
-)
+from dataclasses import astuple
 from datetime import datetime
 from typing import (
     Any,
@@ -18,7 +15,7 @@ from adaptix import (
 from webinar.application.dto.common import (
     DirectionsTrainingDTO,
     DirectionTrainingDTO,
-    ResultExistsDTO,
+    EmailDTO, ResultExistsDTO,
     TgUserIdDTO,
 )
 from webinar.application.dto.user import UpdateUserDataGoogleSheetsDto
@@ -68,6 +65,20 @@ class PostgresUserGateway(PostgresGateway, UserGateway):
         ]
     )
     
+    async def delete_by_email(self, model: EmailDTO) -> TgUserId | None:
+        sql = '''
+            DELETE FROM users
+            WHERE email = %(email)s
+            RETURNING telegram_user_id;
+        '''
+        params = self.retort.dump(model)
+        async with self.connect.cursor() as cursor:
+            await cursor.execute(sql, params)
+            raw_data = cast(Mapping[str, int], await cursor.fetchone())
+        if not raw_data:
+            return None
+        return TgUserId(raw_data['telegram_user_id'])
+    
     async def read_by_tg_user_id(
         self, model: TgUserIdDTO
     ) -> User | None:
@@ -84,8 +95,9 @@ class PostgresUserGateway(PostgresGateway, UserGateway):
               FROM users
              WHERE telegram_user_id = %(telegram_user_id)s
         """
+        params = self.retort.dump(model)
         async with self.connect.cursor() as cursor:
-            await cursor.execute(sql, asdict(model))
+            await cursor.execute(sql, params)
             raw_data = cast(Mapping[str, Any], await cursor.fetchone())
         if not raw_data:
             return None
@@ -115,8 +127,9 @@ class PostgresUserGateway(PostgresGateway, UserGateway):
             )
             ON CONFLICT DO NOTHING;
         """
+        params = self.retort.dump(model)
         async with self.connect.cursor() as cursor:
-            await cursor.execute(sql, asdict(model))
+            await cursor.execute(sql, params)
     
     async def exists(self, model: TgUserIdDTO) -> ResultExistsDTO:
         sql = """
@@ -132,7 +145,23 @@ class PostgresUserGateway(PostgresGateway, UserGateway):
         
         if raw_data is None:
             return ResultExistsDTO(False)
-        return ResultExistsDTO(raw_data["data"])
+        return ResultExistsDTO(raw_data['data'])
+    
+    async def exists_by_email(self, model: EmailDTO) -> ResultExistsDTO:
+        sql = """
+            SELECT EXISTS(
+                SELECT db_id
+                  FROM users
+                 WHERE email = %s
+            ) AS data;
+        """
+        async with self.connect.cursor() as cursor:
+            await cursor.execute(sql, astuple(model))
+            raw_data = cast(Mapping[str, bool] | None, await cursor.fetchone())
+        
+        if raw_data is None:
+            return ResultExistsDTO(False)
+        return ResultExistsDTO(raw_data['data'])
     
     async def read_all_by_direction_training(
         self, model: DirectionsTrainingDTO

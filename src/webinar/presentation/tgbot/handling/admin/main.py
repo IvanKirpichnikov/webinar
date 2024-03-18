@@ -3,6 +3,7 @@ from aiogram import Router
 from . import (
     add,
     create_webinar,
+    delete_user,
     homeworks,
     mailing,
     main_menu,
@@ -25,6 +26,7 @@ files = [
     send_question_answer,
     mailing,
     update_google_tables,
+    delete_user
 ]
 
 for file in files:

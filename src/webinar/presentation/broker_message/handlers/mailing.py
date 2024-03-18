@@ -23,10 +23,10 @@ from psycopg import AsyncConnection
 from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
+from webinar.application.dto.common import DirectionsTrainingDTO
 from webinar.application.exceptions import NotFoundUsers
-from webinar.application.dto import DirectionsTrainingDTO
-from webinar.domain.enums import DirectionTrainingType
-from webinar.infrastructure.postgres.repository.user import UserRepositoryImpl
+from webinar.domain.enums.direction_type import DirectionTrainingType
+from webinar.infrastructure.postgres.gateways.user import PostgresUserGateway
 from webinar.presentation.broker_message.decoder import decoder
 
 
@@ -52,7 +52,7 @@ async def start_mailing(
     try:
         async with pool.connection() as connect:
             connect.row_factory = dict_row
-            user_entities = await UserRepositoryImpl(connect).read_all_by_direction_training(
+            user_entities = await PostgresUserGateway(connect).read_all_by_direction_training(
                 DirectionsTrainingDTO(direction_trainings)
             )
     except NotFoundUsers:
@@ -61,7 +61,8 @@ async def start_mailing(
     for user in user_entities.users:
         await broker.publish(
             message="",
-            subject=f"mailing.from.{admin_chat_id}.to.{user.telegram_chat_id}.msg_id.{mailing_msg_id}",
+            subject=f"mailing.from.{admin_chat_id}.to.{user.telegram_chat_id}.msg_id."
+                    f"{mailing_msg_id}",
             headers={"Nats-Msg-Id": str(uuid4())},
         )
 

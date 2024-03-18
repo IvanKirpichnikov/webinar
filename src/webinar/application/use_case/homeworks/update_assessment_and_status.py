@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from logging import getLogger
 from typing import Protocol
 
 from webinar.application.dto.homework import UpdateHomeworkEvolutionAndStatusDTO
@@ -16,6 +17,8 @@ class UpdateHomeworkEvolutionAndStatus(
 
 
 class UpdateHomeworkEvolutionAndStatusImpl(UpdateHomeworkEvolutionAndStatus):
+    logger = getLogger(__name__)
+    
     def __init__(self, gateway: HomeWorkGateway, uow: DBUoW) -> None:
         self._uow = uow
         self._gateway = gateway
@@ -23,3 +26,7 @@ class UpdateHomeworkEvolutionAndStatusImpl(UpdateHomeworkEvolutionAndStatus):
     async def __call__(self, data: UpdateHomeworkEvolutionAndStatusDTO) -> None:
         async with self._uow.transaction():
             await self._gateway.update_evolution_and_status(data)
+        self.logger.info(
+            'Update homework db_id=%r evolution=%r and status=%r'
+            % (data.db_id, data.evaluation, data.status_type)
+        )

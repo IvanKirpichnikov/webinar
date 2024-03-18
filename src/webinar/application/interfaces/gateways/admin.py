@@ -41,7 +41,7 @@ class AdminGateway(Protocol):
     @abstractmethod
     async def read_random_by_direction_training(
         self, model: DirectionsTrainingDTO
-    ) -> TgChatIdDTO | None:
+    ) -> Admin | None:
         raise NotImplementedError
     
     @abstractmethod

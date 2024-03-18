@@ -5,6 +5,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 from faststream.nats import NatsBroker
 
+from webinar.application.interfaces.delete_message import DeleteMessageData
+from webinar.presentation.annotaded import TgDeleteMessageDepends
+from webinar.presentation.inject import inject, InjectStrategy
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 from webinar.presentation.tgbot.keyboard.callback_data import Direction
 from webinar.presentation.tgbot.states import MailingState
@@ -20,7 +23,6 @@ async def ask_direction_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -40,7 +42,6 @@ async def ask_mailing_handler(
     if event.message is None:
         return
     if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
         return
     
     await event.message.edit_text(
@@ -48,16 +49,21 @@ async def ask_mailing_handler(
         reply_markup=keyboard.inline.back('back')
     )
     await state.set_state(MailingState.ask_message)
-    await state.update_data(direction_training=callback_data.type)
+    await state.update_data(
+        direction_training=callback_data.type,
+        msg_id=event.message.message_id
+    )
 
 
 @route.message(MailingState.ask_message)
+@inject(InjectStrategy.HANDLER)
 async def mailing_handler(
     event: Message,
     state: FSMContext,
     keyboard: KeyboardFactory,
     is_super_admin: bool,
     broker: NatsBroker,
+    tg_delete_message: TgDeleteMessageDepends,
 ) -> None:
     state_data = await state.get_data()
     payload = dict(
@@ -65,9 +71,15 @@ async def mailing_handler(
         mailing_msg_id=event.message_id,
         direction_training=state_data["direction_training"],
     )
+    await tg_delete_message(
+        DeleteMessageData(
+            chat_id=event.chat.id,
+            message_id=state_data['msg_id']
+        )
+    )
     await broker.publish(
         message=lz4.frame.compress(orjson.dumps(payload)),
-        subject="start-mailing-aa",
+        subject="start-mailing",
     )
     await event.answer(
         "Рассылка началась",

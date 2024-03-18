@@ -3,7 +3,7 @@ from dishka import provide, Provider, Scope
 from webinar.config import Config, ConfigFactory
 
 
-class GatewayProvider(Provider):
+class ConfigProvider(Provider):
     @provide(scope=Scope.APP)
     def config_factory(self) -> ConfigFactory:
         return ConfigFactory()

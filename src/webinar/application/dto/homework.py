@@ -2,7 +2,13 @@ from dataclasses import dataclass
 
 from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.domain.enums.homework import HomeWorkStatusType
-from webinar.domain.types import TgUserId
+from webinar.domain.types import DataBaseId, TgUserId
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateHomeWorkStatusDTO:
+    db_id: DataBaseId
+    status_type: HomeWorkStatusType
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,11 +20,13 @@ class TgUserIdAndStatusTypeDTO:
 @dataclass(frozen=True, slots=True)
 class UpdateHomeworkTypeDTO:
     db_id: int
-    
+
 
 @dataclass(frozen=True, slots=True)
-class UpdatingTypeAndCommentByIdDTO(UpdatingTypeByIdDTO):
-    comments: str | None = None
+class UpdateHomeworkStatusAndCommentByIdDTO:
+    db_id: DataBaseId
+    status_type: HomeWorkStatusType
+    comments: str
 
 
 @dataclass(frozen=True, slots=True)

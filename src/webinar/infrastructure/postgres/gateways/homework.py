@@ -4,16 +4,16 @@ from typing import Any, cast, Final, Mapping
 
 from adaptix import as_is_loader, name_mapping, Retort
 
-from webinar.application.dto.common import TgUserIdDTO
+from webinar.application.dto.common import DbIdDTO, TgUserIdDTO
 from webinar.application.dto.homework import (
     HomeWorkIdDTO,
     HomeWorkPaginationDTO,
     TgUserIdAndStatusTypeDTO,
-    UpdateHomeworkEvolutionAndStatusDTO, UpdatingTypeAndCommentByIdDTO,
+    UpdateHomeworkEvolutionAndStatusDTO,
+    UpdateHomeworkStatusAndCommentByIdDTO, UpdateHomeWorkStatusDTO,
 )
 from webinar.application.interfaces.gateways.homework import HomeWorkGateway
 from webinar.application.use_case.homeworks.add_user_homework import AddUserHomeWorkDTO
-from webinar.application.use_case.homeworks.update_homework_status import UpdateHomeWorkStatusDTO
 from webinar.domain.enums.direction_type import DirectionTrainingType
 from webinar.domain.models.homework import (
     HomeWorkAndUserInfoEntity,
@@ -115,6 +115,14 @@ class PostgresHomeWorkGateway(PostgresGateway, HomeWorkGateway):
         """
         await self.connect.execute(sql, asdict(model))
     
+    async def delete_by_db_id(self, model: DbIdDTO) -> None:
+        sql = '''
+            DELETE FROM homeworks
+            WHERE db_id = %(db_id)s
+        '''
+        params = self.retort.dump(model)
+        await self.connect.execute(sql, params)
+    
     async def read_all_by_telegram_user_id(
         self, model: TgUserIdDTO
     ) -> HomeWorks | None:
@@ -187,7 +195,7 @@ class PostgresHomeWorkGateway(PostgresGateway, HomeWorkGateway):
             await cursor.execute(sql, asdict(model))
     
     async def update_type_and_comment(
-        self, model: UpdatingTypeAndCommentByIdDTO
+        self, model: UpdateHomeworkStatusAndCommentByIdDTO
     ) -> None:
         sql = """
             UPDATE

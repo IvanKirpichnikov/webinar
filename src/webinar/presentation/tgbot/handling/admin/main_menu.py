@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InaccessibleMessage, Message
+from aiogram.types import CallbackQuery, Message
 
 from webinar.presentation.tgbot.keyboard import KeyboardFactory
 
@@ -30,12 +30,9 @@ async def admin_menu_callback_handler(
     keyboard: KeyboardFactory,
     is_super_admin: bool,
 ) -> None:
-    if event.message is None:
+    if not isinstance(event.message, Message):
         return
-    if isinstance(event.message, InaccessibleMessage):
-        await event.answer('Нет доступа к сообщению. Введите /start', show_alert=True)
-        return
-
+    
     await event.message.edit_text(
         "Админка", reply_markup=keyboard.inline.admin_main_menu(is_super_admin)
     )

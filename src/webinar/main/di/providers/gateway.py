@@ -2,7 +2,7 @@ from typing import AsyncIterator
 
 from dishka import provide, Provider, Scope
 from psycopg import AsyncConnection
-from psycopg.rows import DictRow
+from psycopg.rows import dict_row, DictRow
 from psycopg_pool import AsyncConnectionPool
 
 from webinar.application.interfaces.gateways.admin import AdminGateway
@@ -35,8 +35,11 @@ class GatewayProvider(Provider):
         await conn.close()
     
     @provide
-    async def connect(self, pool: AsyncConnectionPool[AsyncConnection[DictRow]]) -> AsyncConnection[DictRow]:
+    async def connect(
+        self, pool: AsyncConnectionPool[AsyncConnection[DictRow]]
+    ) -> AsyncIterator[AsyncConnection[DictRow]]:
         async with pool.connection() as conn:
+            conn.row_factory = dict_row
             yield conn
     
     db_uow = provide(

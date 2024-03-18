@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from logging import getLogger
 from typing import Protocol
 
 from webinar.application.interfaces.gateways.user import UserGateway
@@ -24,22 +25,22 @@ class AddUserDTO:
 
 class AddUserUseCase(UseCase[AddUserDTO, None], Protocol):
     @abstractmethod
-    async def __call__(self, model: AddUserDTO) -> None:
+    async def __call__(self, data: AddUserDTO) -> None:
         raise NotImplementedError
 
 
 class AddUserUseCaseImpl(AddUserUseCase):
-    _db_uow: DBUoW
-    _user_gateway: UserGateway
+    logger = getLogger(__name__)
     
     def __init__(
         self,
-        db_uow: DBUoW,
-        user_gateway: UserGateway
+        uow: DBUoW,
+        gateway: UserGateway
     ) -> None:
-        self._db_uow = db_uow
-        self._user_gateway = user_gateway
+        self._uow = uow
+        self._gateway = gateway
     
-    async def __call__(self, model: AddUserDTO) -> None:
-        async with self._db_uow.transaction():
-            await self._user_gateway.create(model)
+    async def __call__(self, data: AddUserDTO) -> None:
+        async with self._uow.transaction():
+            await self._gateway.create(data)
+            self.logger.info('Create user. %r' % data)
